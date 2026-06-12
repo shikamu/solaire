@@ -28,6 +28,12 @@ public:
 	void showLANClientView(const wchar_t* playername);
 	void showOptionsView();
 
+	//True while the LAN lobby (server or client) is the active screen.
+	bool isShowingLobby() const;
+	//Cleanly leaves the LAN lobby: disconnects (freeing the slot on the server) and tears down
+	//the lobby view. Safe to call when not in a lobby.
+	void leaveLobby();
+
 	void toggleNextShip();
 	void togglePreviousShip();
 

@@ -14,7 +14,7 @@
 using namespace irr;
 
 
-MenuGUIEventListener::MenuGUIEventListener(MenuScene* scene) : m_scene(scene)
+MenuGUIEventListener::MenuGUIEventListener(MenuScene* scene) : m_scene(scene), m_pendingLobbyExit(0)
 {
 }
 
@@ -38,15 +38,21 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 			{
 				case GUI_ID_MAINMENU_SINGLE_BUTTON:
 				{
+					if(promptLeaveLobbyIfNeeded(GUI_ID_MAINMENU_SINGLE_BUTTON))
+						return true;//confirmation pending
 					FMODAudio::AudioManager::get().SelectPlaylist("Game");
 					m_scene->showSinglePlayerView();
 					return true;
 				}
 				case GUI_ID_MAINMENU_LAN_BUTTON:
+					if(promptLeaveLobbyIfNeeded(GUI_ID_MAINMENU_LAN_BUTTON))
+						return true;//confirmation pending
 					FMODAudio::AudioManager::get().SelectPlaylist("Menu");
 					m_scene->showLANView();
 					return true;
 				case GUI_ID_MAINMENU_OPTIONS_BUTTON:
+					if(promptLeaveLobbyIfNeeded(GUI_ID_MAINMENU_OPTIONS_BUTTON))
+						return true;//confirmation pending
 					m_scene->showOptionsView();
 					return true;
 				case GUI_ID_MAINMENU_EXIT_BUTTON:
@@ -271,6 +277,11 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 				case GUI_ID_LAN_JOINIP_MESSAGEBOX:
 				{
 					joinLANGameByIP();
+					break;
+				}
+				case GUI_ID_LEAVELOBBY_MESSAGEBOX:
+				{
+					doLobbyExitNavigation();
 					break;
 				}
 			}
@@ -531,6 +542,41 @@ void MenuGUIEventListener::generateErrorMessageBoxForJoinFailure(const int error
 			}
 		}
 	}
+}
+
+bool MenuGUIEventListener::promptLeaveLobbyIfNeeded(const irr::s32 destinationButtonId)
+{
+	if(!m_scene->isShowingLobby())
+		return false;//not in a lobby; the caller proceeds normally
+
+	m_pendingLobbyExit = destinationButtonId;
+	gui::IGUIEnvironment* env = System::get().getDevice()->getGUIEnvironment();
+	gui::IGUIWindow* msgbox = env->addMessageBox(L"Leave LAN game?", L"Leave the current LAN game? Your slot will be freed for someone else.", true, (gui::EMBF_OK | gui::EMBF_CANCEL), NULL, GUI_ID_LEAVELOBBY_MESSAGEBOX);
+	if(msgbox)
+		msgbox->setMinSize(core::dimension2du(360, 110));
+	return true;//handled; waiting for the user to confirm
+}
+
+void MenuGUIEventListener::doLobbyExitNavigation()
+{
+	m_scene->leaveLobby();
+	switch(m_pendingLobbyExit)
+	{
+		case GUI_ID_MAINMENU_SINGLE_BUTTON:
+			FMODAudio::AudioManager::get().SelectPlaylist("Game");
+			m_scene->showSinglePlayerView();
+			break;
+		case GUI_ID_MAINMENU_LAN_BUTTON:
+			FMODAudio::AudioManager::get().SelectPlaylist("Menu");
+			m_scene->showLANView();
+			break;
+		case GUI_ID_MAINMENU_OPTIONS_BUTTON:
+			m_scene->showOptionsView();
+			break;
+		default:
+			break;
+	}
+	m_pendingLobbyExit = 0;
 }
 
 void MenuGUIEventListener::createLANNewGame()

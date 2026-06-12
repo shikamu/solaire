@@ -167,6 +167,29 @@ void MenuScene::showLANClientView(const wchar_t* playername)
 		m_current->show();
 }
 
+bool MenuScene::isShowingLobby() const
+{
+	return m_lanFinalView != NULL && m_current == m_lanFinalView;
+}
+
+void MenuScene::leaveLobby()
+{
+	//Disconnect first so the server frees our slot (the client/server destructor closes the
+	//socket; the server sees the EOF and removes us).
+	if(NetworkController::get().getClient())
+		NetworkController::get().unregisterLANClient();
+	if(NetworkController::get().getServer())
+		NetworkController::get().unregisterLANServer();
+
+	//Tear down the lobby view (deleted via NetworkController). Clear our own pointers so we
+	//don't leave m_current/m_lanFinalView dangling at the freed view.
+	const bool wasCurrent = (m_current == m_lanFinalView);
+	NetworkController::get().unregisterFinalLANView();
+	m_lanFinalView = NULL;
+	if(wasCurrent)
+		m_current = NULL;
+}
+
 void MenuScene::showOptionsView()
 {
 	if(m_current)
