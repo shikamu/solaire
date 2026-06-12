@@ -328,10 +328,11 @@ unsigned int SpaceObjectFactory::CreateWarhead(LogicScene* parentScene, SpaceObj
 unsigned int SpaceObjectFactory::CreateShip(LogicScene* parentScene, ACTUATOR_TYPE actType, unsigned int agentID, stringw name, const unsigned int mask, vector3df& pos, vector3df& rot, const bool needsCreation)
 {
 	
-	SpaceObject* obj = new SpaceObject(parentScene); 
+	SpaceObject* obj = new SpaceObject(parentScene);
 	unsigned int ID = parentScene->RequestSpaceObjectID();
 	obj->ID = ID;
 	obj->SetAgentID(agentID);
+	obj->SetName(name);//so the ship has a name immediately (e.g. bots) - the HUD target name reads this
 	obj->ObjectMask = (mask & (MASK_GROUP_1 | MASK_GROUP_2 | MASK_GROUP_3 | MASK_GROUP_4)) | MASK_SHIP;
 
 	ShipRenderObject* sro = new ShipRenderObject();
@@ -408,12 +409,14 @@ unsigned int SpaceObjectFactory::CreateShip(LogicScene* parentScene, ACTUATOR_TY
 		}
 		case ACT_AI_BASIC:
 		{
-			obj->SetActuator(new AIActuator());
+			obj->SetActuator(new AIActuator(false));
 			obj->GetActuator()->create(sro->GetSceneNode(), parentScene->getSceneManager());
 			break;
 		}
 		case ACT_AI_ADV:
 		{
+			obj->SetActuator(new AIActuator(true));
+			obj->GetActuator()->create(sro->GetSceneNode(), parentScene->getSceneManager());
 			break;
 		}
 		case ACT_NET_CLIENT:

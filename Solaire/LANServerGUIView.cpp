@@ -64,6 +64,14 @@ LANServerGUIView::LANServerGUIView(MenuScene* parent, const wchar_t* playerName,
 	removeBotBtn->setDrawBorder(false);
 	m_elements.push_back(removeBotBtn);
 
+	gui::IGUIButton* botDiffBtn = env->addButton(core::rect<s32>(static_cast<s32>(dim.Width*(0.06f+2*botBtnW)), static_cast<s32>(dim.Height*botY), static_cast<s32>(dim.Width*(0.06f+3*botBtnW)), static_cast<s32>(dim.Height*(botY+botBtnH))), NULL, GUI_ID_LANFINAL_BOTDIFF_BUTTON, L"Bot AI", L"Toggle bot difficulty (Normal / Hard)");
+	botDiffBtn->setImage(driver->getTexture("TestButtonUp.tga"));
+	botDiffBtn->setPressedImage(driver->getTexture("TestButtonDown.tga"));
+	botDiffBtn->setScaleImage(true);
+	botDiffBtn->setUseAlphaChannel(true);
+	botDiffBtn->setDrawBorder(false);
+	m_elements.push_back(botDiffBtn);
+
 	NetworkController::get().unregisterLANServer();
 	/*
 	m_server = new LANServer(playerName, m_advertiser, this); //avoiding to instantiate it in the initializer list because of the need for the "this" keyword
@@ -155,14 +163,24 @@ void LANServerGUIView::removeBot()
 	refreshBotLabel();
 }
 
+void LANServerGUIView::toggleBotDifficulty()
+{
+	LANServer* server = NetworkController::get().getServer();
+	if(server)
+		server->setBotsAdvanced(!server->getBotsAdvanced());
+	refreshBotLabel();
+}
+
 void LANServerGUIView::refreshBotLabel()
 {
 	if(!m_botLabel)
 		return;
 	LANServer* server = NetworkController::get().getServer();
 	unsigned int n = server ? server->getBotCount() : 0;
+	const bool hard = server ? server->getBotsAdvanced() : false;
 	core::stringw t(L"Bots: ");
 	t += (int)n;
+	t += hard ? L"   (AI: Hard)" : L"   (AI: Normal)";
 	m_botLabel->setText(t.c_str());
 }
 

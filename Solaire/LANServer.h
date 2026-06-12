@@ -80,6 +80,10 @@ public:
 	void setBotCount(const unsigned int n);
 	unsigned int getBotCount() const;
 
+	//Whether bots should use the advanced (harder) AI.
+	void setBotsAdvanced(const bool b);
+	bool getBotsAdvanced() const;
+
 	//Sends a notification line to all clients and shows it on the host (lobby chat). Safe to
 	//call from the main thread or the network thread.
 	void broadcastSystemMessage(const wchar_t* text);
@@ -149,6 +153,7 @@ private:
 	bool m_doDisconnectAll;//this flag is used to bypass the disconnectEveryone call when the server view goes hidden. in all cases except one, we do indeed want to disconnect all, but when we press "play", this view gets hidden and we really don't want to disconnect everyone then
 
 	unsigned int m_botCount;//number of AI bots to spawn when the game starts
+	bool m_botsAdvanced;//whether those bots use the advanced AI
 
 	LANServer(const LANServer& other);
 	LANServer& operator=(const LANServer& other);

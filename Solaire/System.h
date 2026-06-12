@@ -83,6 +83,12 @@ public:
 	void drawGameNotifications();
 	void clearGameNotifications();
 
+	//Lobby team name lists. queueLobbyNames is safe from the network thread; flushLobbyNames
+	//applies them to the lobby view on the main thread (touching the GUI off the render thread
+	//crashes).
+	void queueLobbyNames(const std::vector<irr::core::stringw>& teamA, const std::vector<irr::core::stringw>& teamB);
+	void flushLobbyNames();
+
 	void updateSpaceObject(struct SpaceObjectNetworkInfo& pos);
 
 	SpaceObject* getSpaceObjectByID(const unsigned int id);
@@ -90,6 +96,11 @@ public:
 	LogicScene* getCurrentScene() const;
 
 	void feedDataToLANCLient(LANCreationHelper* data);//massive hack
+
+	//Single-player bot difficulty, chosen on the single-player setup screen and read by the
+	//scene when it spawns the AI ships.
+	void setSinglePlayerHard(const bool b) { m_singlePlayerHard = b; }
+	bool isSinglePlayerHard() const { return m_singlePlayerHard; }
 	
 private:
 
@@ -112,8 +123,11 @@ private:
 	ConfigData* m_config;
 
 	//Lobby chat lines queued by other threads, drained on the main thread in flushLobbyChat().
+	//m_chatHistory keeps only the most recent lines (main-thread only) and is rebuilt into the
+	//chat box each time, so the box always shows the latest messages instead of overflowing.
 	CSLock m_chatQueueLock;
 	std::vector<irr::core::stringw> m_pendingChatLines;
+	std::vector<irr::core::stringw> m_chatHistory;
 
 	//In-game notification overlay. m_pendingNotifications is filled from any thread (guarded by
 	//m_notificationLock); m_activeNotifications is main-thread only.
@@ -126,7 +140,14 @@ private:
 	std::vector<irr::core::stringw> m_pendingNotifications;
 	std::vector<GameNotification> m_activeNotifications;
 
+	//Latest lobby team name lists queued from the network thread, applied on the main thread.
+	CSLock m_nameListLock;
+	bool m_hasPendingNames;
+	std::vector<irr::core::stringw> m_pendingTeamA;
+	std::vector<irr::core::stringw> m_pendingTeamB;
+
 	bool m_running, m_terminated, m_pendingInit;
+	bool m_singlePlayerHard;//single-player AI difficulty (false = normal, true = hard)
 
 	System& operator= (const System& other);
 	System(const System& other);

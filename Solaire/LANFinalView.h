@@ -29,6 +29,7 @@ public:
 	//Only the host lobby view manages bots; client views ignore these.
 	virtual void addBot() {}
 	virtual void removeBot() {}
+	virtual void toggleBotDifficulty() {}
 
 	virtual void switchToLANScene() = 0;
 

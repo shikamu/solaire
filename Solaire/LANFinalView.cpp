@@ -108,14 +108,10 @@ void LANFinalView::updateNames(const std::vector<irr::core::stringw>& teamA, con
 
 void LANFinalView::sendChatText(const wchar_t* playerName, const wchar_t* text)
 {
-	gui::IGUIEditBox* chat = (gui::IGUIEditBox*)System::get().getDevice()->getGUIEnvironment()->getRootGUIElement()->getElementFromId(GUI_ID_LANFINAL_CHAT_EDITBOX, true);
-	if(chat)
-	{
-		core::stringw t(chat->getText());
-		t+=L"\n";
-		t+=playerName;
-		t+=L": ";
-		t+=text;
-		chat->setText(t.c_str());
-	}
+	//Route the local echo through the same queued, trimmed path as everything else so the
+	//chat box stays consistent and doesn't overflow.
+	core::stringw line(playerName);
+	line += L": ";
+	line += text;
+	System::get().appendLobbyChatLine(line.c_str());
 }

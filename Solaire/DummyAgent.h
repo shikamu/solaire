@@ -5,11 +5,12 @@
 class DummyAgent : public Agent
 {
 private:
-
+	bool m_advanced;
 public:
-	DummyAgent() {} 
-	~DummyAgent() {} 
-	void Init(); 
+	DummyAgent() : m_advanced(false) {}
+	~DummyAgent() {}
+	void Init();
 	void Update(float dt);
-	
+	void SetAdvanced(const bool b) { m_advanced = b; }
+
 };

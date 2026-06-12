@@ -46,6 +46,16 @@ SinglePlayerGUIView::SinglePlayerGUIView(MenuScene* parent) : GUIView(parent), m
 	m_play->setDrawBorder(false);
 	m_elements.push_back(m_play);
 
+	//Bot difficulty toggle (Normal / Hard), just below PLAY.
+	float diffX = m_leftChevronX + (m_rightChevronX - m_leftChevronX + m_chevronWidth - m_playWidth) * 0.5f;
+	gui::IGUIButton* diff = env->addButton(core::rect<s32>(static_cast<s32>(dim.Width*diffX), static_cast<s32>(dim.Height*0.78f), static_cast<s32>(dim.Width*(diffX+m_playWidth)), static_cast<s32>(dim.Height*(0.78f+0.07f))), 0, GUI_ID_SINGLEMENU_DIFFICULTY_BUTTON, System::get().isSinglePlayerHard() ? L"AI: Hard" : L"AI: Normal", L"Toggle bot difficulty (Normal / Hard)");
+	diff->setImage(driver->getTexture("TestButtonUp.tga"));
+	diff->setPressedImage(driver->getTexture("TestButtonDown.tga"));
+	diff->setScaleImage(true);
+	diff->setUseAlphaChannel(true);
+	diff->setDrawBorder(false);
+	m_elements.push_back(diff);
+
 
 	m_shipNode = m_parent->getSceneManager()->addEmptySceneNode();
 	

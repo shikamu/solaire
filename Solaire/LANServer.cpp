@@ -29,7 +29,7 @@ unsigned int LANServer::ID = 0;
 
 
 LANServer::LANServer(const wchar_t* playerName, GameAdvertiser* advertiser, LANServerGUIView* view) : m_nickname(playerName), m_advertiser(advertiser), m_view(view), m_serverSocket(INVALID_SOCKET),
-	m_serverId(0), m_initialized(false), m_paused(true), m_isInLobby(true), m_doDisconnectAll(true), m_botCount(0)
+	m_serverId(0), m_initialized(false), m_paused(true), m_isInLobby(true), m_doDisconnectAll(true), m_botCount(0), m_botsAdvanced(false)
 {
 
 	m_names.push_back(m_nickname);
@@ -43,6 +43,16 @@ void LANServer::setBotCount(const unsigned int n)
 unsigned int LANServer::getBotCount() const
 {
 	return m_botCount;
+}
+
+void LANServer::setBotsAdvanced(const bool b)
+{
+	m_botsAdvanced = b;
+}
+
+bool LANServer::getBotsAdvanced() const
+{
+	return m_botsAdvanced;
 }
 
 LANServer::~LANServer()
@@ -644,6 +654,9 @@ void LANServer::setPlayerReady(SOCKET s, const bool ready)
 		msg += ready ? L" is ready" : L" is no longer ready";
 		broadcastSystemMessage(msg.c_str());
 	}
+
+	//Refresh the lobby name list so the [READY] badges update for everyone.
+	refreshNames();
 }
 
 bool LANServer::allPlayersReady()
@@ -967,10 +980,28 @@ void LANServer::refreshNames()
 	for(std::vector<core::stringw>::const_iterator it = m_names.begin(); it != m_names.end(); ++it)
 	{
 		core::stringw n = *it;
+
+		//Append a ready badge for connected clients that have readied up. The host isn't tracked
+		//as "ready" (they're the one who starts the game), so it's shown without a badge.
+		core::stringw display = n;
+		if(!n.equals_ignore_case(m_nickname))
+		{
+			for(std::map<SOCKET, irr::core::stringw>::const_iterator pit = m_players.begin(); pit != m_players.end(); ++pit)
+			{
+				if(pit->second.equals_ignore_case(n))
+				{
+					std::map<SOCKET, bool>::const_iterator rit = m_ready.find(pit->first);
+					if(rit != m_ready.end() && rit->second)
+						display += L" *";//small "ready" marker, kept ASCII so it renders in any lobby font
+					break;
+				}
+			}
+		}
+
 		if(teamA.size() > teamB.size())
-			teamB.push_back(n);
+			teamB.push_back(display);
 		else
-			teamA.push_back(n);
+			teamA.push_back(display);
 	}
 
 	NameHelper helper;
@@ -978,7 +1009,8 @@ void LANServer::refreshNames()
 	helper.teamB = teamB;
 	if(m_view)
 	{
-		m_view->updateNames(teamA, teamB);
+		//Update the host's own lobby view on the main thread (not here, on the network thread).
+		System::get().queueLobbyNames(teamA, teamB);
 		TCPPacket* packet = TCPPacketFactory::get().createPacket(REFRESH_NAME_LIST, &helper, 0);
 		sendPacket(packet);
 		delete packet;

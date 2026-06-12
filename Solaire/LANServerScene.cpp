@@ -97,6 +97,7 @@ int LANServerScene::init()
 	//clients exactly like player ships. No Agent object is needed - they're driven by their
 	//actuator and tracked for scoring via their agentID.
 	const unsigned int botCount = server->getBotCount();
+	const ACTUATOR_TYPE botActuator = server->getBotsAdvanced() ? ACT_AI_ADV : ACT_AI_BASIC;
 	for(unsigned int b = 0; b < botCount; ++b)
 	{
 		const unsigned int botAgentID = server->getAvailableAgentID();
@@ -104,7 +105,7 @@ int LANServerScene::init()
 		core::stringw botName(L"Bot ");
 		botName += (int)(b + 1);
 		core::vector3df botPos = GetNextSpawnPoint(botGroup);
-		SpaceObjectFactory::Get().CreateShip(this, ACT_AI_BASIC, botAgentID, botName, botGroup | MASK_SHIP, botPos, botPos, false);
+		SpaceObjectFactory::Get().CreateShip(this, botActuator, botAgentID, botName, botGroup | MASK_SHIP, botPos, botPos, false);
 		createPlayerScoreboardData(botAgentID, botName.c_str(), botGroup | MASK_SHIP);
 	}
 

@@ -26,6 +26,7 @@
 #include "AudioManager.h"
 #include "GUIConstants.h"
 #include "Agent.h"
+#include "LANFinalView.h"
 
 #ifdef _IRR_WINDOWS_
 //link library
@@ -50,7 +51,7 @@ using namespace irr;
 static const bool DO_LOGGING = false;
 
 ::System::System() : m_config(new ConfigData), m_currentScene(NULL), m_menuScene(new MenuScene), m_singlePlayerScene(new SinglePlayerScene), m_lanClientScene(new LANClientScene), m_lanServerScene(new LANServerScene),
-		m_running(true), m_terminated(false), m_pendingInit(false)
+		m_running(true), m_terminated(false), m_pendingInit(false), m_singlePlayerHard(false), m_hasPendingNames(false)
 {
 	/*
 	m_config->createDevice();
@@ -196,6 +197,7 @@ int System::run()
 
 			//Drain any lobby chat/system-message lines queued by other threads (main thread).
 			flushLobbyChat();
+			flushLobbyNames();
 			updateGameNotifications(static_cast<float>(dt));
 
 			currentTime = now;
@@ -290,6 +292,10 @@ void System::toggle(const SCENE scene)
 	{
 		//Don't let kill-feed/notification lines linger across a scene change.
 		clearGameNotifications();
+		m_chatHistory.clear();//fresh chat for the next lobby session
+		m_nameListLock.Lock();
+		m_hasPendingNames = false;//drop any stale lobby name update
+		m_nameListLock.Unlock();
 		m_sceneLock.Lock();
 		if(m_currentScene)
 		{
@@ -383,16 +389,27 @@ void System::flushLobbyChat()
 	//If the chat box isn't present (we're not in a lobby), the lines are simply dropped -
 	//the queue was already cleared by the swap above, so it can't grow without bound.
 	gui::IGUIEditBox* chat = (gui::IGUIEditBox*)getDevice()->getGUIEnvironment()->getRootGUIElement()->getElementFromId(GUI_ID_LANFINAL_CHAT_EDITBOX, true);
-	if(chat)
+	if(!chat)
+		return;
+
+	for(std::vector<core::stringw>::const_iterator it = lines.begin(); it != lines.end(); ++it)
+		m_chatHistory.push_back(*it);
+
+	//Keep only the most recent lines so the box never overflows (Irrlicht's edit box renders
+	//from the top, so an overflowing box hides the newest lines at the bottom).
+	const size_t maxLines = 11;
+	if(m_chatHistory.size() > maxLines)
+		m_chatHistory.erase(m_chatHistory.begin(), m_chatHistory.begin() + (m_chatHistory.size() - maxLines));
+
+	//Rebuild the box from the trimmed history.
+	core::stringw t;
+	for(size_t i = 0; i < m_chatHistory.size(); ++i)
 	{
-		core::stringw t(chat->getText());
-		for(std::vector<core::stringw>::const_iterator it = lines.begin(); it != lines.end(); ++it)
-		{
+		if(i > 0)
 			t += L"\n";
-			t += *it;
-		}
-		chat->setText(t.c_str());
+		t += m_chatHistory[i];
 	}
+	chat->setText(t.c_str());
 }
 
 void System::pushGameNotification(const wchar_t* text)
@@ -466,6 +483,41 @@ void System::clearGameNotifications()
 	m_pendingNotifications.clear();
 	m_notificationLock.Unlock();
 	m_activeNotifications.clear();
+}
+
+void System::queueLobbyNames(const std::vector<core::stringw>& teamA, const std::vector<core::stringw>& teamB)
+{
+	if(m_terminated)
+		return;
+	//Called from the network thread; the actual GUI update happens on the main thread in
+	//flushLobbyNames (touching Irrlicht's GUI tree off the render thread crashes).
+	m_nameListLock.Lock();
+	m_pendingTeamA = teamA;
+	m_pendingTeamB = teamB;
+	m_hasPendingNames = true;
+	m_nameListLock.Unlock();
+}
+
+void System::flushLobbyNames()
+{
+	std::vector<core::stringw> a, b;
+	bool has = false;
+	m_nameListLock.Lock();
+	if(m_hasPendingNames)
+	{
+		a.swap(m_pendingTeamA);
+		b.swap(m_pendingTeamB);
+		m_hasPendingNames = false;
+		has = true;
+	}
+	m_nameListLock.Unlock();
+
+	if(!has || m_terminated)
+		return;
+
+	LANFinalView* view = NetworkController::get().getLANFinalView();
+	if(view)
+		view->updateNames(a, b);
 }
 
 void System::updateSpaceObject(struct SpaceObjectNetworkInfo& info)

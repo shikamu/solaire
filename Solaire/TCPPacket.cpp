@@ -791,12 +791,9 @@ bool RefreshNamesPacket::receive(SOCKET s)
 				offset+=theSize;
 				i+=theSize;
 			}
-			LANFinalView* view = NetworkController::get().getLANFinalView();
-			if(view)
-			{
-				view->updateNames(teamA, teamB);
-				returnValue = true;
-			}
+			//Apply on the main thread (this runs on the network thread); see System::queueLobbyNames.
+			System::get().queueLobbyNames(teamA, teamB);
+			returnValue = true;
 		}
 	}
 	return returnValue;

@@ -25,6 +25,7 @@ public:
 
 	void addBot();
 	void removeBot();
+	void toggleBotDifficulty();
 
 	void switchToLANScene();
 

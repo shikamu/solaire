@@ -25,6 +25,8 @@ private:
 
 	SpaceObject* m_CurrentTarget;
 
+	bool m_advanced;//advanced bots re-target faster and fire more readily/accurately
+
 	void EvaluateTargets();
 	void CalculateApproach();
 	void CalculateChase(); 
@@ -40,6 +42,7 @@ public:
 	~AIController();
 	void Update(float dt);
 	SpaceObject* GetCurrentTarget();
-	ActuatorData& GetActuatorData(); 
+	ActuatorData& GetActuatorData();
+	void setAdvanced(const bool b) { m_advanced = b; }
 };
 

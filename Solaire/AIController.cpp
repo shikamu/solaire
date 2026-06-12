@@ -13,11 +13,11 @@
 using irr::scene::IMeshSceneNode;
 using irr::core::vector3df;
 
-AIController::AIController() : TargettingModule(), m_CurrentTarget (NULL), m_NewTargetTimer(0.0f), m_ApproachWeight(0.0f), m_ChaseWeight(0.0f), m_AttackWeight(0.0f), m_EscapeWeight(0.0f)
+AIController::AIController() : TargettingModule(), m_CurrentTarget (NULL), m_NewTargetTimer(0.0f), m_ApproachWeight(0.0f), m_ChaseWeight(0.0f), m_AttackWeight(0.0f), m_EscapeWeight(0.0f), m_advanced(false)
 {
 }
 
-AIController::AIController(SpaceObject* host, LogicScene* scene) : TargettingModule(host, scene), m_CurrentTarget (NULL), m_NewTargetTimer(0.0f), m_ApproachWeight(0.0f), m_ChaseWeight(0.0f), m_AttackWeight(0.0f), m_EscapeWeight(0.0f)
+AIController::AIController(SpaceObject* host, LogicScene* scene) : TargettingModule(host, scene), m_CurrentTarget (NULL), m_NewTargetTimer(0.0f), m_ApproachWeight(0.0f), m_ChaseWeight(0.0f), m_AttackWeight(0.0f), m_EscapeWeight(0.0f), m_advanced(false)
 {
 }
 
@@ -153,12 +153,13 @@ void AIController::EvaluateTargets()
 
 void AIController::Update(float dt)
 {
-	UpdateTargetList(dt); 
-	m_NewTargetTimer += dt; 
-	if (m_NewTargetTimer > 2.0f)
+	UpdateTargetList(dt);
+	m_NewTargetTimer += dt;
+	//Advanced bots reassess their target much more often (more responsive/aggressive).
+	if (m_NewTargetTimer > (m_advanced ? 0.6f : 2.0f))
 	{
 		EvaluateTargets();
-		m_NewTargetTimer = 0.0f; 
+		m_NewTargetTimer = 0.0f;
 	}
 	if (!m_CurrentTarget)
 	{
@@ -369,7 +370,11 @@ void AIController::UseModules()
 				Inverse.transformVect(EnemyPos);
 				EnemyPos.normalize();
 
-				if (EnemyPos.dotProduct(vector3df(0.0f, 0.0f, 1.0f)) > 0.85f && m_AttackWeight > 1000.0f)
+				//Advanced bots open fire from a wider aim cone and a longer range, so they
+				//land hits more often.
+				const float aimThreshold = m_advanced ? 0.80f : 0.85f;
+				const float weightThreshold = m_advanced ? 400.0f : 1000.0f;
+				if (EnemyPos.dotProduct(vector3df(0.0f, 0.0f, 1.0f)) > aimThreshold && m_AttackWeight > weightThreshold)
 						if ((*i)->FittedModule->Activate()) return;
 			}
 			break;

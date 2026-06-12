@@ -68,6 +68,13 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 					m_scene->toggleNextShip();
 					return true;
 				}
+				case GUI_ID_SINGLEMENU_DIFFICULTY_BUTTON:
+				{
+					const bool hard = !System::get().isSinglePlayerHard();
+					System::get().setSinglePlayerHard(hard);
+					evt.Caller->setText(hard ? L"AI: Hard" : L"AI: Normal");
+					return true;
+				}
 				case GUI_ID_OPTIONSMENU_APPLY_BUTTON:
 				{
 					System::get().setRunning(true);
@@ -153,6 +160,13 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 					LANFinalView* view = NetworkController::get().getLANFinalView();
 					if(view)
 						view->removeBot();
+					return true;
+				}
+				case GUI_ID_LANFINAL_BOTDIFF_BUTTON:
+				{
+					LANFinalView* view = NetworkController::get().getLANFinalView();
+					if(view)
+						view->toggleBotDifficulty();
 					return true;
 				}
 				case GUI_ID_LANFINAL_STARTGAME_BUTTON:

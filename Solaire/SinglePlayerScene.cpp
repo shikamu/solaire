@@ -43,10 +43,13 @@ int SinglePlayerScene::init()
 	GetAgent()->Init();	
 	createPlayerScoreboardData(GetAgent());
 	
+	const bool hardBots = System::get().isSinglePlayerHard();
+
 	m_Dummy.SetMask(MASK_GROUP_1);
 	m_Dummy.SetParentScene(this);
 	m_Dummy.SetName("Karl");
-	m_Dummy.SetID(2); 
+	m_Dummy.SetID(2);
+	m_Dummy.SetAdvanced(hardBots);
 	m_Dummy.Init();
 	createPlayerScoreboardData(&m_Dummy);
 
@@ -54,14 +57,16 @@ int SinglePlayerScene::init()
 	m_Dummy2.SetMask(MASK_GROUP_2);
 	m_Dummy2.SetParentScene(this);
 	m_Dummy2.SetName("Sicso");
-	m_Dummy2.SetID(3); 
+	m_Dummy2.SetID(3);
+	m_Dummy2.SetAdvanced(hardBots);
 	m_Dummy2.Init();
 	createPlayerScoreboardData(&m_Dummy2);
 
 	m_Dummy3.SetMask(MASK_GROUP_2);
 	m_Dummy3.SetParentScene(this);
 	m_Dummy3.SetName("Other Sisco");
-	m_Dummy3.SetID(4); 
+	m_Dummy3.SetID(4);
+	m_Dummy3.SetAdvanced(hardBots);
 	m_Dummy3.Init();
 	createPlayerScoreboardData(&m_Dummy3);
 

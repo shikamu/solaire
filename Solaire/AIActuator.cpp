@@ -7,10 +7,10 @@
 
 using namespace irr;
 
-AIActuator::AIActuator() : Actuator(), m_AI(NULL), m_AIInitialised(false)
+AIActuator::AIActuator(const bool advanced) : Actuator(), m_AI(NULL), m_AIInitialised(false), m_advanced(advanced)
 {
 }
-AIActuator::AIActuator(irr::core::quaternion& current) : Actuator(current), m_AI(NULL), m_AIInitialised(false)
+AIActuator::AIActuator(irr::core::quaternion& current, const bool advanced) : Actuator(current), m_AI(NULL), m_AIInitialised(false), m_advanced(advanced)
 {
 }
 AIActuator::~AIActuator()
@@ -24,6 +24,7 @@ void AIActuator::update(SpaceObject* host, const float dt)
 	{
 		m_AIInitialised = true;
 		m_AI = new AIController(host, host->GetParentScene());
+		m_AI->setAdvanced(m_advanced);
 	}
 
 	m_AI->Update(dt);
