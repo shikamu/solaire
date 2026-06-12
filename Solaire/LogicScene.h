@@ -10,9 +10,12 @@
 #include "SpawnQueue.h"
 #include "ScoreUpdateHelper.h"
 
-class SpaceObject; 
-class Actuator; 
-class Agent; 
+class SpaceObject;
+class Actuator;
+class Agent;
+class SpaceObjectShell;
+struct SpaceObjectNetworkInfo;
+struct ActuatorOutput;
 
 using std::queue;
 using std::map;
@@ -69,11 +72,27 @@ private:
 	bool m_IsNetworked; 
 	Agent* m_Agent;
 	CSLock m_ListLock;
-	SpawnQueue m_Queue; 
+
+	//Network input queues. Producers are the network thread (packet receivers); the sole
+	//consumer is the main thread, which drains them in ApplyNetworkQueues() during update().
+	//This keeps all scene-graph / SpaceObject-map mutation on the main thread, instead of
+	//letting the network thread race the renderer and object cleanup. Guarded by m_NetQueueLock.
+	CSLock m_NetQueueLock;
+	std::vector<SpaceObjectShell*> m_PendingCreations;
+	std::vector<SpaceObjectNetworkInfo*> m_PendingUpdates;
+	std::vector<unsigned int> m_PendingDeletions;
+	std::vector<ActuatorOutput*> m_PendingActuatorData;
+
+	SpawnQueue m_Queue;
 	vector<ExplosionContainer> m_Explosions;
 	float m_scoreboardCurrentY, m_scoreboardCurrentTeamY;
 
 protected:
+	//Drain the network queues and apply them on the main thread (called from update()).
+	void ApplyNetworkQueues();
+	//Free anything still queued without applying it (called from clean()/teardown).
+	void clearNetworkQueues();
+
 	void ForcedSpaceObjectCleanup();
 	void pleaseWait(const bool b);
 	void toggleGameMenu();
@@ -127,5 +146,12 @@ public:
 
 	void CreateExplosion(vector3df& pos, vector3df& rot, float size, unsigned int mask);
 	void UpdateExplosions(const float dt);
+
+	//Thread-safe producers, called from the network thread. Each copies its argument onto a
+	//queue that the main thread applies in update(); see ApplyNetworkQueues().
+	void QueueNetworkCreation(const SpaceObjectShell& shell);
+	void QueueNetworkUpdate(const SpaceObjectNetworkInfo& info);
+	void QueueNetworkDeletion(const unsigned int id);
+	void QueueActuatorData(const ActuatorOutput& data);
 };
 

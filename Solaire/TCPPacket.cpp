@@ -20,12 +20,23 @@
 #include "NetworkActuator.h"
 #include "SpaceObject.h"
 #include "SpaceObjectShell.h"
+#include "LogicScene.h"
 #include "LANServerScene.h"
 #include "SpaceObjectFactory.h"
 #include "LANGameCreationHelper.h"
 #include "ScoreUpdateHelper.h"
 
 using namespace irr;
+
+//Bounds helper for parsing received packets: returns true only if reading/writing
+//`len` bytes starting at `offset` stays within a buffer of `total` bytes. Written to be
+//safe against unsigned overflow in `offset + len`. Every parser below that uses a length
+//or count taken from the wire must gate its memcpy/allocation through this so a corrupt
+//field can't read past the (already fully received) m_data buffer.
+static inline bool fitsWithin(unsigned int total, unsigned int offset, unsigned int len)
+{
+	return offset <= total && len <= (total - offset);
+}
 
 int TCPPacket::receiveHeader(SOCKET s, char dest[TCP_HEADER_SIZE])
 {
@@ -157,7 +168,11 @@ bool TCPPacket::send(SOCKET s)
 
 bool TCPPacket::receive(SOCKET s)
 {
-	if(m_initialized && s != INVALID_SOCKET)
+	//m_size was already validated against [TCP_HEADER_SIZE, MAX_TCP_PACKET_SIZE] when the
+	//packet was created from the header, but guard again here so this is safe even if
+	//called another way: a size below the header would overflow the header stamp below,
+	//and an oversized one would be a hostile/garbage allocation.
+	if(m_initialized && s != INVALID_SOCKET && m_size >= TCP_HEADER_SIZE && m_size <= MAX_TCP_PACKET_SIZE)
 	{
 		if(m_data)
 		{
@@ -328,9 +343,13 @@ bool AcceptNamePacket::send(SOCKET s)
 bool AcceptNamePacket::receive(SOCKET s)
 {
 	bool returnValue = false;
-	if(m_initialized && s != INVALID_SOCKET && m_size == TCP_HEADER_SIZE)
+	if(m_initialized && s != INVALID_SOCKET)
 	{
-		if(TCPPacket::receive(s))
+		//Always drain the declared body off the socket FIRST, then validate. The old code
+		//validated m_size before draining, so a wrong-sized packet left its body bytes in
+		//the stream and desynced every packet after it. Once the body is consumed it is
+		//safe to reject on a size mismatch without corrupting the stream.
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE)
 		{
 			returnValue = true;
 		}
@@ -441,6 +460,9 @@ bool RefreshNamesPacket::receive(SOCKET s)
 	{
 		if(TCPPacket::receive(s))
 		{
+			//Need the two team-size headers before anything else.
+			if(!fitsWithin(m_size, TCP_HEADER_SIZE, 8))
+				return false;
 			unsigned int teamASize = 0;
 			unsigned int teamBSize = 0;
 			memcpy(&teamASize, m_data+TCP_HEADER_SIZE, 4);
@@ -448,19 +470,24 @@ bool RefreshNamesPacket::receive(SOCKET s)
 			std::vector<irr::core::stringw> teamA, teamB;
 			unsigned int nameSize = 0;
 			unsigned int offset = 0;
-			
+
 			for(offset = 0; offset < teamASize;)
 			{
+				//bounds-check the length field and the name bytes before touching them
+				if(!fitsWithin(m_size, TCP_HEADER_SIZE+offset+4+4, 4))
+					break;
 				memcpy(&nameSize, m_data+TCP_HEADER_SIZE+offset+4+4, 4);
 				offset+=4;
 				if(offset < teamASize)
 				{
+					if(!fitsWithin(m_size, TCP_HEADER_SIZE+4+4+offset, nameSize))
+						break;
 					size_t theSize;
 					mbstowcs_s(&theSize, NULL, 0, m_data+TCP_HEADER_SIZE+4+4+offset, nameSize);
 					wchar_t* playername = new wchar_t[theSize];
 					mbstowcs_s(&theSize, playername, theSize, m_data+TCP_HEADER_SIZE+4+4+offset, nameSize);
-					
-					
+
+
 					teamA.push_back(playername);
 					delete[] playername;
 					offset+=nameSize;
@@ -469,9 +496,13 @@ bool RefreshNamesPacket::receive(SOCKET s)
 
 			for(unsigned int i = 0; i < teamBSize;)
 			{
+				if(!fitsWithin(m_size, TCP_HEADER_SIZE+4+4+offset, 4))
+					break;
 				memcpy(&nameSize, m_data+TCP_HEADER_SIZE+4+4+offset, 4);
 				offset+=4;
 				i+=4;
+				if(!fitsWithin(m_size, TCP_HEADER_SIZE+4+4+offset, nameSize))
+					break;
 				size_t theSize;
 				mbstowcs_s(&theSize, NULL, 0, m_data+TCP_HEADER_SIZE+4+4+offset, nameSize);
 				wchar_t* playername = new wchar_t[theSize];
@@ -571,11 +602,17 @@ bool SendChatTextPacket::receive(SOCKET s)
 	{
 		if(TCPPacket::receive(s))
 		{
+			//Need the two length headers, then validate name and text bytes fit.
+			if(!fitsWithin(m_size, TCP_HEADER_SIZE, 8))
+				return false;
 			unsigned int nameSize = 0;
 			unsigned int textSize = 0;
 			memcpy(&nameSize, m_data+TCP_HEADER_SIZE, 4);
 			memcpy(&textSize, m_data+TCP_HEADER_SIZE+4, 4);
-			
+
+			if(!fitsWithin(m_size, TCP_HEADER_SIZE+4+4, nameSize) ||
+			   !fitsWithin(m_size, TCP_HEADER_SIZE+4+4+nameSize, textSize))
+				return false;
 
 			size_t theSize = 0;
 			mbstowcs_s(&theSize, NULL, 0, m_data+TCP_HEADER_SIZE+4+4, nameSize);
@@ -682,11 +719,12 @@ bool UpdateSpaceObjectPacket::send(SOCKET s)
 bool UpdateSpaceObjectPacket::receive(SOCKET s)
 {
 	bool returnValue = false;
-	if(m_initialized && s != INVALID_SOCKET && m_size == TCP_HEADER_SIZE+57/*+28*/)
+	if(m_initialized && s != INVALID_SOCKET)
 	{
-		if(TCPPacket::receive(s))
+		//drain first, then validate size (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE+57/*+28*/)
 		{
-			
+
 			SpaceObjectNetworkInfo helper;
 			memcpy(&(helper.id), m_data+TCP_HEADER_SIZE, 4);
 			//position stuff
@@ -709,7 +747,11 @@ bool UpdateSpaceObjectPacket::receive(SOCKET s)
 			memcpy(&(helper.targetType), m_data+TCP_HEADER_SIZE+4+4+4+4+4+4+4+4+4+4+4+4+4, 1);
 			memcpy(&(helper.targetID),   m_data+TCP_HEADER_SIZE+4+4+4+4+4+4+4+4+4+4+4+4+4+1, 4);
 
-			System::get().updateSpaceObject(helper);
+			//Do NOT touch the scene / Irrlicht scene graph from this (network) thread.
+			//Queue the update; the main thread applies it during LogicScene::update.
+			LogicScene* scene = System::get().getCurrentScene();
+			if(scene)
+				scene->QueueNetworkUpdate(helper);
 			returnValue = true;
 		}
 	}
@@ -771,30 +813,28 @@ bool ClientActuatorDataPacket::send(SOCKET s)
 bool ClientActuatorDataPacket::receive(SOCKET s)
 {
 	bool returnValue = false;
-	if(m_initialized && s != INVALID_SOCKET && m_size == TCP_HEADER_SIZE+24)
+	if(m_initialized && s != INVALID_SOCKET)
 	{
-		if(TCPPacket::receive(s))
+		//drain first, then validate size (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE+24)
 		{
 			unsigned int id = 0;
 			memcpy(&id, m_data+TCP_HEADER_SIZE, 4);
 
 			ActuatorOutput helper(id);
-			
+
 			memcpy(&(helper.PitchVal), m_data+TCP_HEADER_SIZE+4, 4);
 			memcpy(&(helper.RollVal), m_data+TCP_HEADER_SIZE+4+4, 4);
 			memcpy(&(helper.YawVal), m_data+TCP_HEADER_SIZE+4+4+4, 4);
 			memcpy(&(helper.ThrustVal), m_data+TCP_HEADER_SIZE+4+4+4+4, 4);
 			memcpy(&(helper.ButtonMask), m_data+TCP_HEADER_SIZE+4+4+4+4+4, 4);
 
-			SpaceObject* obj = System::get().getSpaceObjectByID(id);
-			if(obj)
-			{
-				NetworkActuator* act = NULL;
-				if((act = dynamic_cast<NetworkActuator*>(obj->GetActuator())))
-				{
-					act->feed(helper.toData());
-				}
-			}
+			//Queue for the main thread instead of looking up the SpaceObject here: this
+			//runs on the server's network thread and the lookup/feed otherwise races the
+			//main thread that owns and deletes those objects.
+			LogicScene* scene = System::get().getCurrentScene();
+			if(scene)
+				scene->QueueActuatorData(helper);
 
 			returnValue = true;
 		}
@@ -889,8 +929,21 @@ bool CreateSpaceObjectPacket::receive(SOCKET s)
 	{
 		if(TCPPacket::receive(s))
 		{
+			//Fixed-size payload that follows the variable-length name. Must stay in sync
+			//with init(): ModuleCooldownFraction(4*4) + ModuleID(4*4) + 3 vector3df(3*4*3)
+			//+ 8 uints/floats(4*8) + NeedsCreation/NeedsDeletion(1+1).
+			const unsigned int fixedPayload = 4*4 + 4*4 + 3*4*3 + 4*8 + 1 + 1;
+
 			unsigned int nameSize = 0;
+			//nameSize is taken from the wire and used as a copy length, so validate that the
+			//name and the fixed payload that follows it actually fit in the received buffer.
+			if(!fitsWithin(m_size, TCP_HEADER_SIZE, 4))
+				return false;
 			memcpy(&nameSize, m_data+TCP_HEADER_SIZE, 4);
+			if(!fitsWithin(m_size, TCP_HEADER_SIZE+4, nameSize) ||
+			   !fitsWithin(m_size, TCP_HEADER_SIZE+4+nameSize, fixedPayload))
+				return false;
+
 			size_t theSize = 0;
 			mbstowcs_s(&theSize, NULL, 0, m_data+TCP_HEADER_SIZE+4, nameSize);
 			wchar_t* playername = new wchar_t[theSize];
@@ -898,7 +951,7 @@ bool CreateSpaceObjectPacket::receive(SOCKET s)
 
 			SpaceObjectShell shell;
 			shell.Name = playername;
-			
+
 			memcpy(&(shell.ModuleCooldownFraction), m_data+TCP_HEADER_SIZE+4+nameSize, 4*4);
 			memcpy(&(shell.ModuleID), m_data+TCP_HEADER_SIZE+4+nameSize+4*4, 4*4);
 			memcpy(&(shell.Position.X), m_data+TCP_HEADER_SIZE+4+nameSize+4*4+4*4, 4);
@@ -921,10 +974,14 @@ bool CreateSpaceObjectPacket::receive(SOCKET s)
 			memcpy(&(shell.NeedsCreation), m_data+TCP_HEADER_SIZE+4+nameSize+4*4+4*4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4, 1);
 			memcpy(&(shell.NeedsDeletion), m_data+TCP_HEADER_SIZE+4+nameSize+4*4+4*4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+1, 1);
 			
+			//Queue creation for the main thread instead of building Irrlicht scene nodes
+			//here on the network thread (CreateObjectFromShell touches the scene graph,
+			//which is not thread-safe and races the renderer / object cleanup).
 			LogicScene* current = System::get().getCurrentScene();
-			SpaceObjectFactory::Get().CreateObjectFromShell(current, &shell);
+			if(current)
+				current->QueueNetworkCreation(shell);
 			delete[] playername;
-			
+
 			returnValue = true;
 		}
 	}
@@ -1043,12 +1100,21 @@ bool CreateInitialShipsAndAgentPacket::receive(SOCKET s)
 	{
 		if(TCPPacket::receive(s))
 		{
+			//Same fixed-size per-shell payload as CreateSpaceObjectPacket / init().
+			const unsigned int fixedPayload = 4*4 + 4*4 + 3*4*3 + 4*8 + 1 + 1;
+
 			LANCreationHelper* helper = new LANCreationHelper;
-			
+
 			unsigned int howManyShells = 0;
 			unsigned int myAgentID = 0;
 			unsigned int myMask = 0;
 			unsigned int myShipID = 0;
+			//The 4 leading uints (count, agentID, mask, shipID) must be present.
+			if(!fitsWithin(m_size, TCP_HEADER_SIZE, 16))
+			{
+				delete helper;
+				return false;
+			}
 			memcpy(&howManyShells, m_data+TCP_HEADER_SIZE, 4);
 			memcpy(&myAgentID, m_data+TCP_HEADER_SIZE+4, 4);
 			memcpy(&myMask, m_data+TCP_HEADER_SIZE+4+4, 4);
@@ -1058,13 +1124,28 @@ bool CreateInitialShipsAndAgentPacket::receive(SOCKET s)
 			helper->shipID = myShipID;
 			helper->mask = myMask;
 
+			bool ok = true;
 			unsigned int offset = 16;//already read howManyShells, agentID, mask and shipID
 			for(unsigned int i = 0; i < howManyShells; ++i)
 			{
+				unsigned int nameSize = 0;
+				//Validate this shell's name length and fixed payload against the buffer
+				//before reading any of it (count + lengths are all off the wire).
+				if(!fitsWithin(m_size, TCP_HEADER_SIZE+offset, 4))
+				{
+					ok = false;
+					break;
+				}
+				memcpy(&nameSize, m_data+TCP_HEADER_SIZE+offset, 4);
+				if(!fitsWithin(m_size, TCP_HEADER_SIZE+offset+4, nameSize) ||
+				   !fitsWithin(m_size, TCP_HEADER_SIZE+offset+4+nameSize, fixedPayload))
+				{
+					ok = false;
+					break;
+				}
+
 				SpaceObjectShell* shell = new SpaceObjectShell;
 
-				unsigned int nameSize = 0;
-				memcpy(&nameSize, m_data+TCP_HEADER_SIZE+offset, 4);
 				size_t theSize = 0;
 				mbstowcs_s(&theSize, NULL, 0, m_data+TCP_HEADER_SIZE+offset+4, nameSize);
 				wchar_t* playername = new wchar_t[theSize];
@@ -1098,6 +1179,17 @@ bool CreateInitialShipsAndAgentPacket::receive(SOCKET s)
 
 				offset+=4+nameSize+4*4+4*4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+4+1+1;
 				delete[] playername;
+			}
+
+			if(!ok)
+			{
+				//Truncated/corrupt packet: free the shells parsed so far (LANCreationHelper
+				//owns nothing on its own) and the helper, then bail. The body was already
+				//fully drained above, so returning here does not desync the stream.
+				for(std::vector<SpaceObjectShell*>::const_iterator it = helper->allShips.begin(); it != helper->allShips.end(); ++it)
+					delete *it;
+				delete helper;
+				return false;
 			}
 
 			System::get().feedDataToLANCLient(helper);
@@ -1162,18 +1254,18 @@ bool DeleteSpaceObjectPacket::send(SOCKET s)
 bool DeleteSpaceObjectPacket::receive(SOCKET s)
 {
 	bool returnValue = false;
-	if(m_initialized && s != INVALID_SOCKET && m_size == TCP_HEADER_SIZE+4)
+	if(m_initialized && s != INVALID_SOCKET)
 	{
-		if(TCPPacket::receive(s))
+		//drain first, then validate size (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE+4)
 		{
 			unsigned int id = 0;
 			memcpy(&id, m_data+TCP_HEADER_SIZE, 4);
-			//System::get().getCurrentScene()->DeleteSpaceObjectByID(id);
-			SpaceObject* obj = System::get().getCurrentScene()->GetSpaceObjectByID(id);
-			if (obj)
-			{
-				obj->FlagForDeletion();
-			}
+			//Queue the deletion; the main thread looks up and flags the object during
+			//LogicScene::update. Looking it up here would race the main thread's cleanup.
+			LogicScene* scene = System::get().getCurrentScene();
+			if(scene)
+				scene->QueueNetworkDeletion(id);
 			returnValue = true;
 		}
 	}
@@ -1322,9 +1414,10 @@ bool ToggleRequestScorePacket::send(SOCKET s)
 bool ToggleRequestScorePacket::receive(SOCKET s)
 {
 	bool returnValue = false;
-	if(m_initialized && s != INVALID_SOCKET && m_size == TCP_HEADER_SIZE)
+	if(m_initialized && s != INVALID_SOCKET)
 	{
-		if(TCPPacket::receive(s))
+		//drain first, then validate size (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE)
 		{
 			//server will typically receive this packet
 			LANServer* server = NetworkController::get().getServer();

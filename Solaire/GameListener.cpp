@@ -80,6 +80,20 @@ bool GameListener::init()
 		System::get().log(errorMsg.c_str());
 		return false;
 	}
+
+	//Allow several sockets to bind this same broadcast port. Without this, only the FIRST
+	//process on the machine can bind UDP 7777; any other instance's bind() fails and that
+	//instance never receives game advertisements (its server list stays empty). On Windows
+	//SO_REUSEADDR also makes incoming broadcasts get delivered to ALL bound sockets, which is
+	//exactly what we want so every instance on the box can discover games.
+	char reuse = 1;
+	if(setsockopt(m_broadcastSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == SOCKET_ERROR){
+		core::stringc errorMsg("setsockopt(SO_REUSEADDR) failed with ");
+		errorMsg+=getSocketError(WSAGetLastError());
+		System::get().log(errorMsg.c_str());
+		return false;
+	}
+
 	if(bind(m_broadcastSocket, m_broadcastAddress, m_broadcastAddressSize) == SOCKET_ERROR){
 		core::stringc errorMsg("Bind failed with ");
 		errorMsg+=getSocketError(WSAGetLastError());

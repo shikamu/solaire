@@ -118,6 +118,15 @@ void LANClient::receiveData()
 				p->receive(m_socket);
 				delete p;
 			}
+			else
+			{
+				//createPacket rejected the header (unknown type or out-of-range size). We
+				//can't tell where the next packet begins, so treat it as a lost connection
+				//rather than risk a desync cascade or crash.
+				System::get().log("dropping connection: corrupt/unknown packet header");
+				m_showServerDisconnected = true;
+				backToLANView();
+			}
 			break;
 		}
 		case RECEIVED_WRONG_SIZE_HEADER:

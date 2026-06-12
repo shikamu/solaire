@@ -70,7 +70,12 @@ TCPPacket* TCPPacketFactory::instantiate(const TCPPacketType type) const
 			break;
 		}
 		default:
-			throw 0;//we should never get here or it means we forgot to implement a case in the switch
+			//Unknown/garbage type. This used to `throw 0`, but the throw propagated
+			//uncaught out of the network thread's run() and called std::terminate(),
+			//crashing the whole game on a single corrupt byte. Return NULL instead and
+			//let the caller drop the connection.
+			p = NULL;
+			break;
 	}
 	return p;
 }
@@ -90,6 +95,16 @@ TCPPacket* TCPPacketFactory::createPacket(char header[TCP_HEADER_SIZE]) const
 	TCPPacketType type;
 	memcpy(&size, header, 4);
 	memcpy(&type, header+4, 4);
+
+	//Validate the size that came off the wire BEFORE trusting it. A size smaller than the
+	//header would cause an out-of-bounds write while stamping the header into the buffer;
+	//a wildly large size would cause a huge/failed allocation. Either means the stream is
+	//corrupt or desynced, so refuse to build a packet and let the caller drop the link.
+	if(size < TCP_HEADER_SIZE || size > MAX_TCP_PACKET_SIZE)
+	{
+		return NULL;
+	}
+
 	TCPPacket* p = instantiate(type);
 	if(p)
 	{

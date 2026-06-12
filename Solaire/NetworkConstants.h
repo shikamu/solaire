@@ -35,3 +35,10 @@ static const unsigned int RECEIVE_ERROR							= 0x00000040;
 
 //other TCP-related constants
 static const unsigned int TCP_HEADER_SIZE = 8;//in bytes
+
+//Upper bound on a single packet's total size (header + body). A size field read off
+//the wire that is smaller than the header or larger than this is treated as a framing
+//error / corruption and causes the connection to be dropped rather than trusting it for
+//a heap allocation or buffer parse. 1 MB is far larger than any legitimate packet (the
+//biggest is CREATE_INITIAL_SHIPS_AND_AGENT, a few KB even with many players).
+static const unsigned int MAX_TCP_PACKET_SIZE = 1024 * 1024;

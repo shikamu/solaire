@@ -224,8 +224,12 @@ void LANServerScene::addAgent(Agent* agent)
 void LANServerScene::replaceAgent(const unsigned int agentID)
 {
 	std::map<unsigned int, Agent*>::const_iterator it = m_playerAgents.find(agentID);
-	if(it != m_playerAgents.end())
+	if(it != m_playerAgents.end() && it->second)
 	{
-		it->second->GetSpaceObject()->GetActuator()->SetNeedReplacement(true);
+		//A disconnecting player's agent may not currently own a ship (e.g. it died and
+		//hasn't respawned), so the SpaceObject and its actuator can legitimately be NULL.
+		SpaceObject* obj = it->second->GetSpaceObject();
+		if(obj && obj->GetActuator())
+			obj->GetActuator()->SetNeedReplacement(true);
 	}
 }

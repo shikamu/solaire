@@ -156,8 +156,13 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 				}
 				case GUI_ID_LAN_TEST_BUTTON:
 				{
-					//NetworkController::get().unregisterLANServer();
-					int connect = m_scene->connectToGame(L"127.0.0.1", L"Test");
+					//Dev shortcut: join a game hosted on THIS machine (127.0.0.1), skipping
+					//discovery and the name prompt. Use a random suffix so several local
+					//instances can each "Test"-join without colliding on the same nickname
+					//(the server rejects duplicate names).
+					core::stringw testName(L"Test");
+					testName += (rand() % 10000);
+					int connect = m_scene->connectToGame(L"127.0.0.1", testName.c_str());
 					if(connect != 0)
 					{
 						core::stringc errorMsg("omfg, connect didn't succeed! returned code=");
@@ -168,7 +173,7 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 					else
 					{
 						System::get().log("blimey, the server accepted us!");
-						m_scene->showLANClientView(L"Test");
+						m_scene->showLANClientView(testName.c_str());
 					}
 
 					return true;

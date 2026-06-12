@@ -6,8 +6,13 @@
 #include "System.h"
 #include "SpaceObject.h"
 #include "Actuator.h"
+#include "NetworkActuator.h"
+#include "SpaceObjectShell.h"
+#include "SpaceObjectNetworkInfo.h"
+#include "SpaceObjectFactory.h"
+#include "FactoryConstants.h"
 #include "RenderObjectIncludes.h"
-#include "LogicConstants.h" 
+#include "LogicConstants.h"
 #include "Agent.h"
 #include "GUIConstants.h"
 #include "InputConstants.h"
@@ -66,6 +71,10 @@ int LogicScene::init()
 
 int LogicScene::update(const float dt)
 {
+	//Apply anything the network thread queued (object creates/updates/deletes, actuator
+	//input) here on the main thread, before the scene is read/rendered this frame.
+	ApplyNetworkQueues();
+
 	if(System::get().getConfig()->getKeybindings().isTriggered(GAME_MENU) && !m_gameMenuTriggered)
 	{
 		m_gameMenuTriggered = true;
@@ -91,6 +100,10 @@ int LogicScene::update(const float dt)
 
 int LogicScene::clean()
 {
+	//Drop anything the network thread queued but the main thread never applied, so we don't
+	//leak it across a scene switch. The network client/server is paused before teardown.
+	clearNetworkQueues();
+
 	if(m_pleaseWait)
 	{
 		m_pleaseWait->remove();
@@ -512,6 +525,101 @@ void LogicScene::CleanupSpaceObjects()
 			++it;
 	}
 	m_ListLock.Unlock();
+}
+
+void LogicScene::QueueNetworkCreation(const SpaceObjectShell& shell)
+{
+	m_NetQueueLock.Lock();
+	m_PendingCreations.push_back(new SpaceObjectShell(shell));
+	m_NetQueueLock.Unlock();
+}
+
+void LogicScene::QueueNetworkUpdate(const SpaceObjectNetworkInfo& info)
+{
+	m_NetQueueLock.Lock();
+	m_PendingUpdates.push_back(new SpaceObjectNetworkInfo(info));
+	m_NetQueueLock.Unlock();
+}
+
+void LogicScene::QueueNetworkDeletion(const unsigned int id)
+{
+	m_NetQueueLock.Lock();
+	m_PendingDeletions.push_back(id);
+	m_NetQueueLock.Unlock();
+}
+
+void LogicScene::QueueActuatorData(const ActuatorOutput& data)
+{
+	m_NetQueueLock.Lock();
+	m_PendingActuatorData.push_back(new ActuatorOutput(data));
+	m_NetQueueLock.Unlock();
+}
+
+void LogicScene::ApplyNetworkQueues()
+{
+	//Swap the queues out under the lock so it's held only briefly and we never run scene
+	//code (which can be slow or re-enter the scene locks) while the network thread waits.
+	std::vector<SpaceObjectShell*> creations;
+	std::vector<SpaceObjectNetworkInfo*> updates;
+	std::vector<unsigned int> deletions;
+	std::vector<ActuatorOutput*> actuatorData;
+
+	m_NetQueueLock.Lock();
+	creations.swap(m_PendingCreations);
+	updates.swap(m_PendingUpdates);
+	deletions.swap(m_PendingDeletions);
+	actuatorData.swap(m_PendingActuatorData);
+	m_NetQueueLock.Unlock();
+
+	//Order matters: create first so later updates/deletes that reference an object resolve.
+	for(std::vector<SpaceObjectShell*>::const_iterator it = creations.begin(); it != creations.end(); ++it)
+	{
+		SpaceObjectFactory::Get().CreateObjectFromShell(this, *it);
+		delete *it;
+	}
+
+	for(std::vector<SpaceObjectNetworkInfo*>::const_iterator it = updates.begin(); it != updates.end(); ++it)
+	{
+		System::get().updateSpaceObject(**it);
+		delete *it;
+	}
+
+	for(std::vector<ActuatorOutput*>::const_iterator it = actuatorData.begin(); it != actuatorData.end(); ++it)
+	{
+		ActuatorOutput* data = *it;
+		SpaceObject* obj = GetSpaceObjectByID(data->shipID);
+		if(obj)
+		{
+			NetworkActuator* act = dynamic_cast<NetworkActuator*>(obj->GetActuator());
+			if(act)
+				act->feed(data->toData());
+		}
+		delete data;
+	}
+
+	//Deletes only flag the object; CleanupSpaceObjects (also main thread) frees it.
+	for(std::vector<unsigned int>::const_iterator it = deletions.begin(); it != deletions.end(); ++it)
+	{
+		SpaceObject* obj = GetSpaceObjectByID(*it);
+		if(obj)
+			obj->FlagForDeletion();
+	}
+}
+
+void LogicScene::clearNetworkQueues()
+{
+	m_NetQueueLock.Lock();
+	for(std::vector<SpaceObjectShell*>::const_iterator it = m_PendingCreations.begin(); it != m_PendingCreations.end(); ++it)
+		delete *it;
+	m_PendingCreations.clear();
+	for(std::vector<SpaceObjectNetworkInfo*>::const_iterator it = m_PendingUpdates.begin(); it != m_PendingUpdates.end(); ++it)
+		delete *it;
+	m_PendingUpdates.clear();
+	for(std::vector<ActuatorOutput*>::const_iterator it = m_PendingActuatorData.begin(); it != m_PendingActuatorData.end(); ++it)
+		delete *it;
+	m_PendingActuatorData.clear();
+	m_PendingDeletions.clear();
+	m_NetQueueLock.Unlock();
 }
 
 void LogicScene::pleaseWait(const bool b)

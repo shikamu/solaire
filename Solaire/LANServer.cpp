@@ -572,7 +572,13 @@ void LANServer::receiveData()
 				break;
 			case RECEIVED_EOF:
 			{
-				NetworkController::get().getServerScene()->replaceAgent(getAgentID(s));
+				{
+					//getServerScene() can be NULL if the scene was torn down (e.g. host left
+					//to the menu) just as a client drops; guard it to avoid a null deref.
+					LANServerScene* serverScene = NetworkController::get().getServerScene();
+					if(serverScene)
+						serverScene->replaceAgent(getAgentID(s));
+				}
 
 				System::get().log("closing connection, received EOF while trying to receive header");
 				m_names.erase(std::remove(m_names.begin(), m_names.end(), it->second), m_names.end());
@@ -584,7 +590,13 @@ void LANServer::receiveData()
 			}
 			case RECEIVE_ERROR:
 			{
-				NetworkController::get().getServerScene()->replaceAgent(getAgentID(s));
+				{
+					//getServerScene() can be NULL if the scene was torn down (e.g. host left
+					//to the menu) just as a client drops; guard it to avoid a null deref.
+					LANServerScene* serverScene = NetworkController::get().getServerScene();
+					if(serverScene)
+						serverScene->replaceAgent(getAgentID(s));
+				}
 
 				core::stringc errorMsg("recv() failed with ");
 				errorMsg+=getSocketError(WSAGetLastError());
@@ -605,8 +617,23 @@ void LANServer::receiveData()
 					infoMsg+=p->getType();
 					System::get().log(infoMsg.c_str());
 					p->receive(s);
+					delete p;
 				}
-				delete p;
+				else
+				{
+					//createPacket rejected the header (unknown type or out-of-range size).
+					//The byte stream is no longer trustworthy for this client, so drop it
+					//cleanly rather than risk a desync cascade or crash.
+					LANServerScene* scene = NetworkController::get().getServerScene();
+					if(scene)
+						scene->replaceAgent(getAgentID(s));
+					System::get().log("dropping connection: corrupt/unknown packet header");
+					m_names.erase(std::remove(m_names.begin(), m_names.end(), it->second), m_names.end());
+					closesocket(s);
+					shouldIncrement = false;
+					it = m_players.erase(it);
+					needToRefreshNames = true;
+				}
 				break;
 			}
 			case RECEIVED_WRONG_SIZE_HEADER:
@@ -662,8 +689,16 @@ void LANServer::receiveData()
 					infoMsg+=p->getType();
 					System::get().log(infoMsg.c_str());
 					p->receive(s);
+					delete p;
 				}
-				delete p;
+				else
+				{
+					//Corrupt/unknown header from a not-yet-approved client: drop it.
+					System::get().log("dropping unapproved connection: corrupt/unknown header");
+					closesocket(s);
+					shouldIncrement = false;
+					it = m_waitingForApproval.erase(std::remove(m_waitingForApproval.begin(), m_waitingForApproval.end(), s), m_waitingForApproval.end());
+				}
 				break;
 			}
 			case RECEIVED_WRONG_SIZE_HEADER:
