@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actuator.h" />
+    <ClInclude Include="Agent.h" />
+    <ClInclude Include="AIActuator.h" />
+    <ClInclude Include="AIController.h" />
+    <ClInclude Include="AudioClip.h" />
+    <ClInclude Include="AudioManager.h" />
+    <ClInclude Include="AutoCamera.h" />
+    <ClInclude Include="BasicLogEventListener.h" />
+    <ClInclude Include="ChatHelper.h" />
+    <ClInclude Include="ClientHumanActuator.h" />
+    <ClInclude Include="ConfigData.h" />
+    <ClInclude Include="CSLock.h" />
+    <ClInclude Include="DeviceCreationParameters.h" />
+    <ClInclude Include="DummyActuator.h" />
+    <ClInclude Include="DummyAgent.h" />
+    <ClInclude Include="EventReceiver.h" />
+    <ClInclude Include="FactoryConstants.h" />
+    <ClInclude Include="GameAdvertiser.h" />
+    <ClInclude Include="GameListener.h" />
+    <ClInclude Include="GameLog.h" />
+    <ClInclude Include="GarbageCollector.h" />
+    <ClInclude Include="GUIConstants.h" />
+    <ClInclude Include="LANClientLogicSceneGUIEventListener.h" />
+    <ClInclude Include="LANServerLogicSceneGUIEventListener.h" />
+    <ClInclude Include="LogicSceneGUIEventListener.h" />
+    <ClInclude Include="MenuGUIEventListener.h" />
+    <ClInclude Include="GUIView.h" />
+    <ClInclude Include="GUIViewAnimator.h" />
+    <ClInclude Include="HUDShader.h" />
+    <ClInclude Include="HumanActuator.h" />
+    <ClInclude Include="IEventListener.h" />
+    <ClInclude Include="InputConstants.h" />
+    <ClInclude Include="KeybindingListener.h" />
+    <ClInclude Include="KeyBindings.h" />
+    <ClInclude Include="LANClient.h" />
+    <ClInclude Include="LANClientGUIView.h" />
+    <ClInclude Include="LANClientScene.h" />
+    <ClInclude Include="LANFinalView.h" />
+    <ClInclude Include="LANGameCreationHelper.h" />
+    <ClInclude Include="LANGUIView.h" />
+    <ClInclude Include="LANServer.h" />
+    <ClInclude Include="LANServerGUIView.h" />
+    <ClInclude Include="LANServerScene.h" />
+    <ClInclude Include="LocalAgent.h" />
+    <ClInclude Include="LocalClientAgent.h" />
+    <ClInclude Include="LockPointer.h" />
+    <ClInclude Include="LockShader.h" />
+    <ClInclude Include="LogicConstants.h" />
+    <ClInclude Include="LogicModule.h" />
+    <ClInclude Include="LogicScene.h" />
+    <ClInclude Include="MainMenuGUIView.h" />
+    <ClInclude Include="MMTimer.hpp" />
+    <ClInclude Include="ModelParams.h" />
+    <ClInclude Include="Modifier.h" />
+    <ClInclude Include="ModuleTemplates.h" />
+    <ClInclude Include="NamePacketHelper.h" />
+    <ClInclude Include="NetworkActuator.h" />
+    <ClInclude Include="NetworkConstants.h" />
+    <ClInclude Include="NetworkController.h" />
+    <ClInclude Include="NetworkUtilities.h" />
+    <ClInclude Include="OptionsGUIView.h" />
+    <ClInclude Include="OutlineFadeoutShader.h" />
+    <ClInclude Include="PhysicsController.h" />
+    <ClInclude Include="PhysicsListener.h" />
+    <ClInclude Include="PhysicsObject.h" />
+    <ClInclude Include="PhysicsParams.h" />
+    <ClInclude Include="Playlist.h" />
+    <ClInclude Include="ProjectileRenderObject.h" />
+    <ClInclude Include="ProjectileShader.h" />
+    <ClInclude Include="RenderingConstants.h" />
+    <ClInclude Include="RenderObjectIncludes.h" />
+    <ClInclude Include="ScoreUpdateHelper.h" />
+    <ClInclude Include="SpaceObjectNetworkInfo.h" />
+    <ClInclude Include="PropertyState.h" />
+    <ClInclude Include="RemoteAgent.h" />
+    <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="RenderObject.h" />
+    <ClInclude Include="SceneNodeParams.h" />
+    <ClInclude Include="ServerLocalAgent.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShaderIncludes.h" />
+    <ClInclude Include="ShipShader.h" />
+    <ClInclude Include="SinglePlayerGUIView.h" />
+    <ClInclude Include="SinglePlayerScene.h" />
+    <ClInclude Include="SpaceObject.h" />
+    <ClInclude Include="SpaceObjectFactory.h" />
+    <ClInclude Include="SpaceObjectParams.h" />
+    <ClInclude Include="SpaceObjectShell.h" />
+    <ClInclude Include="SpawnQueue.h" />
+    <ClInclude Include="StandardShader.h" />
+    <ClInclude Include="System.h" />
+    <ClInclude Include="MenuScene.h" />
+    <ClInclude Include="TargettingModule.h" />
+    <ClInclude Include="Task.h" />
+    <ClInclude Include="TCPPacket.h" />
+    <ClInclude Include="TCPPacketFactory.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="Utilities.h" />
+    <ClInclude Include="WarheadActuator.h" />
+    <ClInclude Include="WarheadRenderObject.h" />
+    <ClInclude Include="WarheadShader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Actuator.cpp" />
+    <ClCompile Include="Agent.cpp" />
+    <ClCompile Include="AIActuator.cpp" />
+    <ClCompile Include="AIController.cpp" />
+    <ClCompile Include="AudioClip.cpp" />
+    <ClCompile Include="AudioManager.cpp" />
+    <ClCompile Include="AutoCamera.cpp" />
+    <ClCompile Include="BasicLogEventListener.cpp" />
+    <ClCompile Include="BulletDamageModule.cpp" />
+    <ClCompile Include="BulletEMPModule.cpp" />
+    <ClCompile Include="ClientHumanActuator.cpp" />
+    <ClCompile Include="ConfigData.cpp" />
+    <ClCompile Include="DeviceCreationParameters.cpp" />
+    <ClCompile Include="DevRepairModule.cpp" />
+    <ClCompile Include="DummyActuator.cpp" />
+    <ClCompile Include="DummyAgent.cpp" />
+    <ClCompile Include="EventReceiver.cpp" />
+    <ClCompile Include="GameAdvertiser.cpp" />
+    <ClCompile Include="GameListener.cpp" />
+    <ClCompile Include="GameLog.cpp" />
+    <ClCompile Include="GarbageCollector.cpp" />
+    <ClCompile Include="LANClientLogicSceneGUIEventListener.cpp" />
+    <ClCompile Include="LANServerLogicSceneGUIEventListener.cpp" />
+    <ClCompile Include="LogicSceneGUIEventListener.cpp" />
+    <ClCompile Include="MenuGUIEventListener.cpp" />
+    <ClCompile Include="GUIView.cpp" />
+    <ClCompile Include="GUIViewAnimator.cpp" />
+    <ClCompile Include="HUDShader.cpp" />
+    <ClCompile Include="HumanActuator.cpp" />
+    <ClCompile Include="IEventListener.cpp" />
+    <ClCompile Include="KeybindingListener.cpp" />
+    <ClCompile Include="KeyBindings.cpp" />
+    <ClCompile Include="LANClient.cpp" />
+    <ClCompile Include="LANClientGUIView.cpp" />
+    <ClCompile Include="LANClientScene.cpp" />
+    <ClCompile Include="LANFinalView.cpp" />
+    <ClCompile Include="LANGUIView.cpp" />
+    <ClCompile Include="LANServer.cpp" />
+    <ClCompile Include="LANServerGUIView.cpp" />
+    <ClCompile Include="LANServerScene.cpp" />
+    <ClCompile Include="LocalAgent.cpp" />
+    <ClCompile Include="LocalClientAgent.cpp" />
+    <ClCompile Include="LockShader.cpp" />
+    <ClCompile Include="LogicModule.cpp" />
+    <ClCompile Include="LogicScene.cpp" />
+    <ClCompile Include="MachineGunModule.cpp" />
+    <ClCompile Include="MainMenuGUIView.cpp" />
+    <ClCompile Include="NetworkActuator.cpp" />
+    <ClCompile Include="NetworkController.cpp" />
+    <ClCompile Include="NetworkUtilities.cpp" />
+    <ClCompile Include="OptionsGUIView.cpp" />
+    <ClCompile Include="OutlineFadeoutShader.cpp" />
+    <ClCompile Include="PhysicsController.cpp" />
+    <ClCompile Include="PhysicsListener.cpp" />
+    <ClCompile Include="PhysicsObject.cpp" />
+    <ClCompile Include="Playlist.cpp" />
+    <ClCompile Include="ProjectileRenderObject.cpp" />
+    <ClCompile Include="ProjectileShader.cpp" />
+    <ClCompile Include="PropertyState.cpp" />
+    <ClCompile Include="RemoteAgent.cpp" />
+    <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="RenderObject.cpp" />
+    <ClCompile Include="ServerLocalAgent.cpp" />
+    <ClCompile Include="RocketLauncherModule.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShieldRegenModule.cpp" />
+    <ClCompile Include="ShipShader.cpp" />
+    <ClCompile Include="SinglePlayerGUIView.cpp" />
+    <ClCompile Include="SinglePlayerScene.cpp" />
+    <ClCompile Include="SpaceObject.cpp" />
+    <ClCompile Include="SpaceObjectFactory.cpp" />
+    <ClCompile Include="SpaceObjectNetworkInfo.cpp" />
+    <ClCompile Include="SpaceObjectShell.cpp" />
+    <ClCompile Include="SpawnQueue.cpp" />
+    <ClCompile Include="StandardShader.cpp" />
+    <ClCompile Include="System.cpp" />
+    <ClCompile Include="MenuScene.cpp" />
+    <ClCompile Include="TargettingModule.cpp" />
+    <ClCompile Include="Task.cpp" />
+    <ClCompile Include="TCPPacket.cpp" />
+    <ClCompile Include="TCPPacketFactory.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="TorpedoLauncherModule.cpp" />
+    <ClCompile Include="Utilities.cpp" />
+    <ClCompile Include="WarheadActuator.cpp" />
+    <ClCompile Include="WarheadRenderObject.cpp" />
+    <ClCompile Include="WarheadShader.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{DC111CAE-5020-435E-B9D4-B8EE719AB897}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Solaire</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\irrlicht-1.7.3\include;G:\irrlicht-1.7.3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\irrlicht-1.7.3\lib\Win32-visualstudio;G:\irrlicht-1.7.3\lib\Win32-visualstudio;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\irrlicht-1.7.3\include;G:\irrlicht-1.7.3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\irrlicht-1.7.3\lib\Win32-visualstudio;G:\irrlicht-1.7.3\lib\Win32-visualstudio;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>
+      </RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>$(PROJECT_DIR)..\fmod\lib\fmodex_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "C:\irrlicht-1.7.3\bin\Win32-VisualStudio\Irrlicht.dll" "$(OutDir)"</Command>
+      <Message>Copying Irrlicht.dll to output directory</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>$(PROJECT_DIR)..\fmod\lib\fmodex_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "C:\irrlicht-1.7.3\bin\Win32-VisualStudio\Irrlicht.dll" "$(OutDir)"</Command>
+      <Message>Copying Irrlicht.dll to output directory</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

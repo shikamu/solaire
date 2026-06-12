@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Solaire", "Solaire\Solaire.vcxproj", "{DC111CAE-5020-435E-B9D4-B8EE719AB897}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DC111CAE-5020-435E-B9D4-B8EE719AB897}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DC111CAE-5020-435E-B9D4-B8EE719AB897}.Debug|Win32.Build.0 = Debug|Win32
+		{DC111CAE-5020-435E-B9D4-B8EE719AB897}.Release|Win32.ActiveCfg = Release|Win32
+		{DC111CAE-5020-435E-B9D4-B8EE719AB897}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+EndGlobal

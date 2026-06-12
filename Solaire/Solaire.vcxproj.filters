@@ -1,0 +1,681 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="GUI">
+      <UniqueIdentifier>{5dc9618e-4650-4e82-b409-b4682f9e4372}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\header">
+      <UniqueIdentifier>{479b7b70-90df-4ab2-b281-b2912ed7238c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\source">
+      <UniqueIdentifier>{c8a86578-16f8-4943-b31e-c944c8915586}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input">
+      <UniqueIdentifier>{1f41e940-ed12-48b9-9deb-af688f2ad014}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\header">
+      <UniqueIdentifier>{e50274d7-e213-4ca4-aef2-99b8c5450df0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Input\source">
+      <UniqueIdentifier>{b488b75b-d8c9-4409-927f-bc38fa4bb4ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{e3490716-c91b-450f-bb6c-7164e0b11033}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\source">
+      <UniqueIdentifier>{f6ca2e83-26b5-4477-9480-a86a1d51c611}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\header">
+      <UniqueIdentifier>{d0bd5042-cee1-42fa-b965-1a083e5989d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic">
+      <UniqueIdentifier>{bf53a4c2-a422-4ab1-9fb1-2c3f1f311bd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\header">
+      <UniqueIdentifier>{bf8dba56-9949-4eca-a947-b1e9b99d7507}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\source">
+      <UniqueIdentifier>{8d69520d-c4ed-4f79-9139-a55b8c49f690}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{5ae88ad2-7494-4630-bc0a-e6453bc880ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\header">
+      <UniqueIdentifier>{161025f3-6a22-4a6e-8e8d-911c8a4fb2c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio">
+      <UniqueIdentifier>{ec338f63-ea3b-4db7-8a57-f09aff7a66f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio\header">
+      <UniqueIdentifier>{78aceb75-2be9-4d5b-8bd5-d772d9488bb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Audio\source">
+      <UniqueIdentifier>{a8582530-8574-4fd8-bab1-b354a9e5b717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Networking">
+      <UniqueIdentifier>{c59ced74-28d2-40d8-b87a-62b0ff14ae76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Networking\header">
+      <UniqueIdentifier>{a2cef37a-72b8-4884-ba2d-e96e93336311}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Networking\source">
+      <UniqueIdentifier>{e0d1ac02-54d1-40bb-af62-1803911c4557}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\source\Module Templates">
+      <UniqueIdentifier>{d5a6d54d-fb07-4051-8457-8ff63eadb97d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\header\actuator">
+      <UniqueIdentifier>{6c42bbf2-61f7-4772-a376-d12bb8ce0a52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\source\actuator">
+      <UniqueIdentifier>{ec3c1410-26c3-44cc-9061-48c758613e65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\header\agent">
+      <UniqueIdentifier>{fc311387-da70-4d0a-9b62-708e843fcb8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\source\agent">
+      <UniqueIdentifier>{8afb4ea6-daea-428f-a4d0-afd1915bb359}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\header\AI">
+      <UniqueIdentifier>{1741df1f-cdb9-45b6-b83b-a04466ac52c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics\source">
+      <UniqueIdentifier>{a771b87c-6470-4fe2-8a98-cb8520d125e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logic\source\AI">
+      <UniqueIdentifier>{12839fdc-50f9-478a-b18d-2be800910f2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\source\shaders">
+      <UniqueIdentifier>{9a100bf9-4824-4706-b33f-050d4b19a448}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\header\Shaders">
+      <UniqueIdentifier>{3114b0b9-03fe-474f-937a-2c973ec05992}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\header\Render Objects">
+      <UniqueIdentifier>{220c834e-d0d4-4fe0-800b-c11fd9db1c3a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering\source\Render Objects">
+      <UniqueIdentifier>{0abdc3c9-aa63-4918-bbec-1fa448ca5a3b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ConfigData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Task.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="System.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceCreationParameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUIConstants.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="GUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="GUIViewAnimator.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsGUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SinglePlayerGUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="MainMenuGUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="EventReceiver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IEventListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicLogEventListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicScene.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuScene.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaceObject.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SinglePlayerScene.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="KeybindingListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputConstants.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyBindings.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsController.h">
+      <Filter>Physics\header</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsListener.h">
+      <Filter>Physics\header</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsObject.h">
+      <Filter>Physics\header</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsParams.h">
+      <Filter>Physics\header</Filter>
+    </ClInclude>
+    <ClInclude Include="CSLock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LockPointer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicModule.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Modifier.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyState.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaceObjectFactory.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="ModuleTemplates.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicConstants.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANGUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkUtilities.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkController.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="TargettingModule.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaceObjectParams.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneNodeParams.h">
+      <Filter>Rendering\header</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderManager.h">
+      <Filter>Rendering\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANClientGUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANServerGUIView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANFinalView.h">
+      <Filter>GUI\header</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelParams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoCamera.h">
+      <Filter>Rendering\header</Filter>
+    </ClInclude>
+    <ClInclude Include="GameAdvertiser.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="GameListener.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANClient.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANServer.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPPacket.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="TCPPacketFactory.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkConstants.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="NamePacketHelper.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="ChatHelper.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANClientScene.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANServerScene.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Actuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="HumanActuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkActuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="FactoryConstants.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Agent.h">
+      <Filter>Logic\header\agent</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalAgent.h">
+      <Filter>Logic\header\agent</Filter>
+    </ClInclude>
+    <ClInclude Include="DummyActuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="DummyAgent.h">
+      <Filter>Logic\header\agent</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientHumanActuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalClientAgent.h">
+      <Filter>Logic\header\agent</Filter>
+    </ClInclude>
+    <ClInclude Include="RemoteAgent.h">
+      <Filter>Logic\header\agent</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerLocalAgent.h">
+      <Filter>Logic\header\agent</Filter>
+    </ClInclude>
+    <ClInclude Include="LANGameCreationHelper.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="MMTimer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WarheadActuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaceObjectShell.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SpaceObjectNetworkInfo.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuGUIEventListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LogicSceneGUIEventListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANClientLogicSceneGUIEventListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="LANServerLogicSceneGUIEventListener.h">
+      <Filter>Input\header</Filter>
+    </ClInclude>
+    <ClInclude Include="GarbageCollector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AIController.h">
+      <Filter>Logic\header\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="AIActuator.h">
+      <Filter>Logic\header\actuator</Filter>
+    </ClInclude>
+    <ClInclude Include="GameLog.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="SpawnQueue.h">
+      <Filter>Logic\header</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderingConstants.h">
+      <Filter>Rendering\header</Filter>
+    </ClInclude>
+    <ClInclude Include="ScoreUpdateHelper.h">
+      <Filter>Networking\header</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>Audio\header</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioClip.h">
+      <Filter>Audio\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Playlist.h">
+      <Filter>Audio\header</Filter>
+    </ClInclude>
+    <ClInclude Include="HUDShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="LockShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="OutlineFadeoutShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectileShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderIncludes.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="ShipShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="StandardShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderObject.h">
+      <Filter>Rendering\header\Render Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectileRenderObject.h">
+      <Filter>Rendering\header\Render Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderObjectIncludes.h">
+      <Filter>Rendering\header\Render Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="WarheadRenderObject.h">
+      <Filter>Rendering\header\Render Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="WarheadShader.h">
+      <Filter>Rendering\header\Shaders</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ConfigData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Task.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="System.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceCreationParameters.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsGUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="SinglePlayerGUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="MainMenuGUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="GUIViewAnimator.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="GUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="EventReceiver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IEventListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicLogEventListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderManager.cpp">
+      <Filter>Rendering\source</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuScene.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LogicScene.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="SpaceObject.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="SinglePlayerScene.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="KeybindingListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KeyBindings.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsController.cpp">
+      <Filter>Physics\source</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsObject.cpp">
+      <Filter>Physics\source</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Audio\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LogicModule.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="PropertyState.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="SpaceObjectFactory.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANGUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkController.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkUtilities.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANClientGUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANServerGUIView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANFinalView.cpp">
+      <Filter>GUI\source</Filter>
+    </ClCompile>
+    <ClCompile Include="AutoCamera.cpp">
+      <Filter>Rendering\source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameAdvertiser.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameListener.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANClient.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANServer.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPPacket.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="TCPPacketFactory.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANServerScene.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANClientScene.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="BulletDamageModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+    <ClCompile Include="Actuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="HumanActuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkActuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="MachineGunModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+    <ClCompile Include="DevRepairModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalAgent.cpp">
+      <Filter>Logic\source\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="DummyActuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="DummyAgent.cpp">
+      <Filter>Logic\source\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsListener.cpp">
+      <Filter>Physics\source</Filter>
+    </ClCompile>
+    <ClCompile Include="TargettingModule.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientHumanActuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="Agent.cpp">
+      <Filter>Logic\source\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalClientAgent.cpp">
+      <Filter>Logic\source\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="RemoteAgent.cpp">
+      <Filter>Logic\source\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerLocalAgent.cpp">
+      <Filter>Logic\source\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="RocketLauncherModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+    <ClCompile Include="WarheadActuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="SpaceObjectShell.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="SpaceObjectNetworkInfo.cpp">
+      <Filter>Networking\source</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuGUIEventListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LogicSceneGUIEventListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANClientLogicSceneGUIEventListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LANServerLogicSceneGUIEventListener.cpp">
+      <Filter>Input\source</Filter>
+    </ClCompile>
+    <ClCompile Include="GarbageCollector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AIController.cpp">
+      <Filter>Logic\source\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="AIActuator.cpp">
+      <Filter>Logic\source\actuator</Filter>
+    </ClCompile>
+    <ClCompile Include="ShieldRegenModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+    <ClCompile Include="GameLog.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="SpawnQueue.cpp">
+      <Filter>Logic\source</Filter>
+    </ClCompile>
+    <ClCompile Include="BulletEMPModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioClip.cpp">
+      <Filter>Audio\source</Filter>
+    </ClCompile>
+    <ClCompile Include="Playlist.cpp">
+      <Filter>Audio\source</Filter>
+    </ClCompile>
+    <ClCompile Include="HUDShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="LockShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectileShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="ShipShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="StandardShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="OutlineFadeoutShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderObject.cpp">
+      <Filter>Rendering\source\Render Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectileRenderObject.cpp">
+      <Filter>Rendering\source\Render Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="WarheadRenderObject.cpp">
+      <Filter>Rendering\source\Render Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="WarheadShader.cpp">
+      <Filter>Rendering\source\shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="TorpedoLauncherModule.cpp">
+      <Filter>Logic\source\Module Templates</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
