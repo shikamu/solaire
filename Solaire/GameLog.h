@@ -58,8 +58,9 @@ private:
 	static GameLog m_Log; 
 	GameLog();
 	~GameLog(); 
-	map<unsigned int, AgentLogData*> m_Data; 
-	map<unsigned int, GroupLogData*> m_GroupData; 
+	map<unsigned int, AgentLogData*> m_Data;
+	map<unsigned int, GroupLogData*> m_GroupData;
+	bool m_matchOver;//latched true once a team reaches the kill limit; reset in Clean()
 	//map<unsigned int, int> m_GroupScore; 
 	void LogGroupScore(unsigned int groupID, int value);
 	void LogGroupDeath(unsigned int groupID);
@@ -88,9 +89,14 @@ public:
 	}
 
 
-	void LogShot(unsigned int agentID); 
-	void LogDeath(unsigned int agentID); 
+	void LogShot(unsigned int agentID);
+	//Records the death and returns the killer's agent ID (0 if it was a suicide / unknown).
+	unsigned int LogDeath(unsigned int agentID);
 	void LogHit(unsigned int sourceID, unsigned int targetID);
+
+	//Returns the group mask of a team that has just reached MATCH_KILL_LIMIT (once per match),
+	//or 0 if no team has won yet. Latches so it only fires a single time.
+	unsigned int CheckForWinner();
 	//void LogKill(unsigned int sourceID, unsigned int targetID);
 	int GetGroupScore(unsigned int groupID);
 	int GetGroupKills(unsigned int groupID);

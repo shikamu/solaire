@@ -11,6 +11,9 @@
 #include "LogicModule.h"
 #include "SpaceObjectShell.h"
 #include "GameLog.h"
+#include "System.h"
+#include "NetworkController.h"
+#include "LANServer.h"
 
 using std::pair;
 
@@ -188,6 +191,52 @@ void SpaceObject::Update(float dt)
 	}
 }
 
+void SpaceObject::SetNetworkTarget(const vector3df& pos, const vector3df& rot)
+{
+	m_NetTargetPosition = pos;
+	m_NetTargetRotation = rot;
+	if(!m_HasNetTarget)
+	{
+		//First update for this object: snap straight to it so it doesn't visibly slide in
+		//from wherever it was spawned/created.
+		m_HasNetTarget = true;
+		if(m_RenderObj)
+		{
+			m_RenderObj->SetPosition(pos);
+			m_RenderObj->SetRotation(rot);
+		}
+	}
+}
+
+void SpaceObject::InterpolateToNetworkTarget(float dt)
+{
+	if(!m_HasNetTarget || !m_RenderObj)
+		return;
+
+	//Exponential smoothing toward the latest server transform. factor ~= fraction of the
+	//remaining gap closed this frame; clamped so a long frame can't overshoot.
+	float factor = dt * 12.0f;
+	if(factor > 1.0f) factor = 1.0f;
+	if(factor < 0.0f) factor = 0.0f;
+
+	//Position: straight lerp.
+	vector3df pos = m_RenderObj->GetPosition();
+	pos += (m_NetTargetPosition - pos) * factor;
+	m_RenderObj->SetPosition(pos);
+
+	//Rotation: slerp via quaternions so we take the shortest arc and avoid Euler wraparound
+	//artifacts (e.g. snapping the "long way" around from 359 to 1 degrees).
+	vector3df curRot = m_RenderObj->GetRotation();
+	irr::core::quaternion qCurrent(curRot.X * irr::core::DEGTORAD, curRot.Y * irr::core::DEGTORAD, curRot.Z * irr::core::DEGTORAD);
+	irr::core::quaternion qTarget(m_NetTargetRotation.X * irr::core::DEGTORAD, m_NetTargetRotation.Y * irr::core::DEGTORAD, m_NetTargetRotation.Z * irr::core::DEGTORAD);
+	irr::core::quaternion qResult;
+	qResult.slerp(qCurrent, qTarget, factor);
+	vector3df newRot;
+	qResult.toEuler(newRot);
+	newRot *= irr::core::RADTODEG;
+	m_RenderObj->SetRotation(newRot);
+}
+
 void SpaceObject::OnDestroy()
 {
 	FlagForDeletion();
@@ -256,10 +305,50 @@ void SpaceObject::Die()
 	}
 	m_PhysicsObj->Unlock();
 
-	GameLog::Get().LogDeath(m_AgentID);
+	unsigned int killerID = GameLog::Get().LogDeath(m_AgentID);
+
+	//Kill feed: build "<killer> destroyed <victim>" (or "<victim> was destroyed" for a suicide),
+	//show it locally, and in a networked game broadcast it to the clients' overlays.
+	{
+		AgentLogData* victimData = GameLog::Get().GetData(m_AgentID);
+		stringw victimName = victimData ? victimData->Name : GetName();
+		stringw killMsg;
+		if(killerID != 0 && killerID != m_AgentID)
+		{
+			AgentLogData* killerData = GameLog::Get().GetData(killerID);
+			stringw killerName = killerData ? killerData->Name : stringw(L"Someone");
+			killMsg = killerName;
+			killMsg += L" destroyed ";
+			killMsg += victimName;
+		}
+		else
+		{
+			killMsg = victimName;
+			killMsg += L" was destroyed";
+		}
+
+		System::get().pushGameNotification(killMsg.c_str());
+
+		LANServer* server = m_ParentScene->IsNetworked() ? NetworkController::get().getServer() : NULL;
+		if(server)
+			server->broadcastKillFeed(killMsg.c_str());
+
+		//End-of-match: first team to the kill limit wins; announce it once.
+		unsigned int winnerGroup = GameLog::Get().CheckForWinner();
+		if(winnerGroup != 0)
+		{
+			const int teamNum = (winnerGroup == MASK_GROUP_1) ? 1 : (winnerGroup == MASK_GROUP_2) ? 2 : (winnerGroup == MASK_GROUP_3) ? 3 : 4;
+			stringw banner(L"*** TEAM ");
+			banner += teamNum;
+			banner += L" WINS! ***";
+			System::get().pushGameNotification(banner.c_str());
+			if(server)
+				server->broadcastKillFeed(banner.c_str());
+		}
+	}
 
 	SetSoftTarget(NULL);
-	SetHardTarget(NULL); 
+	SetHardTarget(NULL);
 	vector3df ExpPos = GetRenderObject()->GetPosition();
 	vector3df ExpRot = GetRenderObject()->GetRotation();
 	m_ParentScene->CreateExplosion(ExpPos, ExpRot, Size, ObjectMask);

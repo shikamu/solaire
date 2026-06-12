@@ -91,6 +91,23 @@ int LANServerScene::init()
 		helper[it->first] = h;
 	}
 
+	//Spawn AI bots the host requested. They're created here, before the shells are gathered
+	//below, so their shells ride along in the CREATE_INITIAL_SHIPS_AND_AGENT packet (hence
+	//needsCreation=false). The AIActuator drives them on the server and they replicate to
+	//clients exactly like player ships. No Agent object is needed - they're driven by their
+	//actuator and tracked for scoring via their agentID.
+	const unsigned int botCount = server->getBotCount();
+	for(unsigned int b = 0; b < botCount; ++b)
+	{
+		const unsigned int botAgentID = server->getAvailableAgentID();
+		const unsigned int botGroup = (b % 2 == 0) ? MASK_GROUP_1 : MASK_GROUP_2;
+		core::stringw botName(L"Bot ");
+		botName += (int)(b + 1);
+		core::vector3df botPos = GetNextSpawnPoint(botGroup);
+		SpaceObjectFactory::Get().CreateShip(this, ACT_AI_BASIC, botAgentID, botName, botGroup | MASK_SHIP, botPos, botPos, false);
+		createPlayerScoreboardData(botAgentID, botName.c_str(), botGroup | MASK_SHIP);
+	}
+
 	std::vector<SpaceObjectShell*> allShells;
 	std::vector<LockPointer<SpaceObjectShell>*> allFromServer = server->getAllShells();
 	for(std::vector<LockPointer<SpaceObjectShell>*>::const_iterator it = allFromServer.begin(); it != allFromServer.end(); ++it)

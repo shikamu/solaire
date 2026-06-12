@@ -2,6 +2,14 @@
 #include <winsock2.h>
 #include "LANFinalView.h"
 
+namespace irr
+{
+	namespace gui
+	{
+		class IGUIButton;
+	}
+}
+
 class LANClient;
 
 class LANClientGUIView : public LANFinalView
@@ -17,10 +25,16 @@ public:
 
 	void switchToLANScene();
 
+	//Flips this client's ready state, updates the button label and tells the server.
+	void toggleReady();
+
 private:
-	
+
 	LANClient* m_client;
 
 	SOCKET m_socket;
+
+	bool m_ready;
+	irr::gui::IGUIButton* m_readyButton;
 };
 

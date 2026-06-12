@@ -613,6 +613,31 @@ void KeyBindings::readBindings(char* filename)
 		}
 	}
 	delete xml;
+
+	//Make sure every action has an entry, even if the loaded file predates it (e.g. an older
+	//bindings.xml saved before the spectator actions existed). Give the spectator actions a
+	//sensible default key so they work out of the box; any other missing action gets an empty
+	//binding. The user can still rebind/clear them from the Options menu (which is saved).
+	for(unsigned int i = NOT_AN_ACTION_FIRST + 1; i < NOT_AN_ACTION_COUNT; ++i)
+	{
+		Action a = (Action)i;
+		if(m_primaryBindings.find(a) == m_primaryBindings.end())
+		{
+			Binding* def = NULL;
+			switch(a)
+			{
+				case SPECTATE_TOGGLE: def = new KeyboardBinding(KEYBOARD_KEY_O); break;
+				case SPECTATE_NEXT:   def = new KeyboardBinding(KEYBOARD_KEY_PERIOD); break;
+				case SPECTATE_PREV:   def = new KeyboardBinding(KEYBOARD_KEY_COMMA); break;
+				default:              def = new Binding(); break;
+			}
+			m_primaryBindings.insert(std::pair<Action, Binding*>(a, def));
+		}
+		if(m_secondaryBindings.find(a) == m_secondaryBindings.end())
+		{
+			m_secondaryBindings.insert(std::pair<Action, Binding*>(a, new Binding()));
+		}
+	}
 }
 
 void KeyBindings::saveBindings(char* filename)

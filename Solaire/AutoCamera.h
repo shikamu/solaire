@@ -23,8 +23,9 @@ private:
 	//irr::scene::ISceneNode* AxisX; 
 	irr::scene::ISceneNode* AxisY; 
 	//irr::scene::ISceneNode* AxisZ; 
-	vector3df m_Offset; 
-	float dX, dY, dZ; 
+	vector3df m_Offset;
+	float dX, dY, dZ;
+	bool m_FixedFollow;
 public:
 	AutoCamera();
 	~AutoCamera();
@@ -34,5 +35,8 @@ public:
 	void SetSceneManager(irr::scene::ISceneManager* smgr);
 	void SetTarget(SpaceObject* target);
 	void SetOffset(const vector3df& offset);
+	//When true, use a steady chase offset instead of the player-input-driven one. Used for
+	//spectating another ship (whose controls we don't drive).
+	void SetFixedFollow(const bool b) { m_FixedFollow = b; }
 	irr::scene::ICameraSceneNode* GetNode();
 };

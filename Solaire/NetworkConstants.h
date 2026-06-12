@@ -20,6 +20,15 @@ enum TCPPacketType
 	TOGGLE_REQUEST_SCORE_UPDATES,
 	UPDATE_SCORE,
 
+	REJECT_GAME_FULL,	//server -> joining client: the game has reached MAX_PLAYERS. Appended at
+						//the end so existing type values stay stable.
+
+	SYSTEM_MESSAGE,		//server -> clients: a plain notification line (e.g. "X left the game").
+
+	PLAYER_READY,		//client -> server: this client's lobby ready state (1 byte bool).
+
+	KILL_FEED,			//server -> clients: an in-game notification line (kills, wins, etc.).
+
 	TCPPACKETTYPE_FORCE_32_BIT = 0x7fffffff //This enum is never used, it only forces the compiler to compile these enumeration values to 32 bit.
 };
 
@@ -35,6 +44,16 @@ static const unsigned int RECEIVE_ERROR							= 0x00000040;
 
 //other TCP-related constants
 static const unsigned int TCP_HEADER_SIZE = 8;//in bytes
+
+//Maximum number of players allowed in a single LAN game (host included). Connection
+//attempts beyond this are refused by the server.
+static const unsigned int MAX_PLAYERS = 4;
+
+//Maximum number of AI bots the host can add to a LAN game.
+static const unsigned int MAX_BOTS = 8;
+
+//Team kill total that ends the match (the team to reach it first "wins"). Tunable.
+static const unsigned int MATCH_KILL_LIMIT = 20;
 
 //Upper bound on a single packet's total size (header + body). A size field read off
 //the wire that is smaller than the header or larger than this is treated as a framing

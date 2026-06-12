@@ -3,6 +3,8 @@
 #include "RenderManager.h"
 
 #include "System.h"
+#include "LogicScene.h"
+#include "Agent.h"
 
 using namespace irr;
 
@@ -36,6 +38,19 @@ void RenderManager::render()
 	}
 	//System::get().getCurrentSceneManager()->drawAll();
 	System::get().getDevice()->getGUIEnvironment()->drawAll();
+
+	//Draw the local player's 2D HUD overlay (radar + lead indicator) on top of everything.
+	LogicScene* hudScene = System::get().getCurrentScene();
+	if(hudScene)
+	{
+		Agent* hudAgent = hudScene->GetAgent();
+		if(hudAgent)
+			hudAgent->DrawHUD();
+	}
+
+	//In-game notification overlay (kill feed, win banner, etc.).
+	System::get().drawGameNotifications();
+
 	System::get().getDevice()->getVideoDriver()->endScene();
 
 	wchar_t msg[128];

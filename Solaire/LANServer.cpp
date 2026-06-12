@@ -29,10 +29,20 @@ unsigned int LANServer::ID = 0;
 
 
 LANServer::LANServer(const wchar_t* playerName, GameAdvertiser* advertiser, LANServerGUIView* view) : m_nickname(playerName), m_advertiser(advertiser), m_view(view), m_serverSocket(INVALID_SOCKET),
-	m_serverId(0), m_initialized(false), m_paused(true), m_isInLobby(true), m_doDisconnectAll(true)
+	m_serverId(0), m_initialized(false), m_paused(true), m_isInLobby(true), m_doDisconnectAll(true), m_botCount(0)
 {
 
 	m_names.push_back(m_nickname);
+}
+
+void LANServer::setBotCount(const unsigned int n)
+{
+	m_botCount = (n > MAX_BOTS) ? MAX_BOTS : n;
+}
+
+unsigned int LANServer::getBotCount() const
+{
+	return m_botCount;
 }
 
 LANServer::~LANServer()
@@ -503,6 +513,24 @@ void LANServer::checkName(SOCKET s, const char* nickname)
 	received+="' is acceptable";
 	System::get().log(received.c_str());
 
+	//Refuse the connection if the game is already full. m_names holds the host plus every
+	//approved client, so its size is the current player count.
+	if(m_names.size() >= MAX_PLAYERS)
+	{
+		System::get().log("rejecting connection: game is full");
+		//Tell the client *why* (so it can say "game is full" rather than "name refused"),
+		//then drop it.
+		TCPPacket* packet = TCPPacketFactory::get().createPacket(REJECT_GAME_FULL, NULL, TCP_HEADER_SIZE);
+		if(packet)
+		{
+			packet->send(s);
+			delete packet;
+		}
+		closesocket(s);
+		m_approvalRemoval.push_back(s);
+		return;
+	}
+
 	irr::core::stringw clientRequestedName(nickname);
 	//delete[] nickname;
 
@@ -554,6 +582,89 @@ void LANServer::checkName(SOCKET s, const char* nickname)
 	}
 }
 
+void LANServer::broadcastSystemMessage(const wchar_t* text)
+{
+	//Notify all connected clients...
+	TCPPacket* packet = TCPPacketFactory::get().createPacket(SYSTEM_MESSAGE, (void*)text, 0);
+	if(packet)
+	{
+		//Serialize with the network thread's own sends so two threads never interleave bytes
+		//on the same client socket. m_lock is a CRITICAL_SECTION (re-entrant), so this is safe
+		//even when this is called from the network thread, which already holds m_lock.
+		m_lock.Lock();
+		sendPacket(packet);
+		m_lock.Unlock();
+		delete packet;
+	}
+	//...and show it on the host's own screen (queued; written on the main thread).
+	System::get().appendLobbyChatLine(text);
+}
+
+void LANServer::broadcastKillFeed(const wchar_t* text)
+{
+	TCPPacket* packet = TCPPacketFactory::get().createPacket(KILL_FEED, (void*)text, 0);
+	if(packet)
+	{
+		//Serialize with the network thread's own sends (re-entrant m_lock), see broadcastSystemMessage.
+		m_lock.Lock();
+		sendPacket(packet);
+		m_lock.Unlock();
+		delete packet;
+	}
+}
+
+void LANServer::announcePlayerLeft(const irr::core::stringw& name)
+{
+	//The leaver is already out of m_players by the time this is called.
+	core::stringw msg(L"* ");
+	msg += name;
+	msg += L" left the game";
+	if(m_isInLobby)
+	{
+		//Before the match starts there's a chat box, so use it.
+		broadcastSystemMessage(msg.c_str());
+	}
+	else
+	{
+		//In-game there's no chat box; use the on-screen notification overlay instead.
+		System::get().pushGameNotification(msg.c_str());
+		broadcastKillFeed(msg.c_str());
+	}
+}
+
+void LANServer::setPlayerReady(SOCKET s, const bool ready)
+{
+	m_ready[s] = ready;
+
+	std::map<SOCKET, irr::core::stringw>::const_iterator it = m_players.find(s);
+	if(it != m_players.end())
+	{
+		core::stringw msg(L"* ");
+		msg += it->second;
+		msg += ready ? L" is ready" : L" is no longer ready";
+		broadcastSystemMessage(msg.c_str());
+	}
+}
+
+bool LANServer::allPlayersReady()
+{
+	//Called from the main thread (PLAY button); lock so we don't read m_players/m_ready
+	//while the network thread is mutating them mid-connect/disconnect.
+	m_lock.Lock();
+	bool all = true;
+	for(std::map<SOCKET, irr::core::stringw>::const_iterator it = m_players.begin(); it != m_players.end(); ++it)
+	{
+		std::map<SOCKET, bool>::const_iterator r = m_ready.find(it->first);
+		if(r == m_ready.end() || !r->second)
+		{
+			all = false;
+			break;
+		}
+	}
+	m_lock.Unlock();
+	return all;
+}
+
 void LANServer::receiveData()
 {
 	bool needToRefreshNames = false;
@@ -581,11 +692,14 @@ void LANServer::receiveData()
 				}
 
 				System::get().log("closing connection, received EOF while trying to receive header");
+				core::stringw eofDepartedName(it->second);
 				m_names.erase(std::remove(m_names.begin(), m_names.end(), it->second), m_names.end());
 				closesocket(s);
+				m_ready.erase(s);
 				shouldIncrement = false;
 				it = m_players.erase(it);
 				needToRefreshNames = true;
+				announcePlayerLeft(eofDepartedName);
 				break;
 			}
 			case RECEIVE_ERROR:
@@ -601,11 +715,14 @@ void LANServer::receiveData()
 				core::stringc errorMsg("recv() failed with ");
 				errorMsg+=getSocketError(WSAGetLastError());
 				System::get().log(errorMsg.c_str());
+				core::stringw errDepartedName(it->second);
 				m_names.erase(std::remove(m_names.begin(), m_names.end(), it->second), m_names.end());
 				closesocket(s);
+				m_ready.erase(s);
 				shouldIncrement = false;
 				it = m_players.erase(it);
 				needToRefreshNames = true;
+				announcePlayerLeft(errDepartedName);
 				break;
 			}
 			case RECEIVED_HEADER_SUCCESSFULLY:
@@ -741,6 +858,7 @@ void LANServer::disconnectEveryone()
 			closesocket(it->first);
 		}
 		m_players.clear();
+		m_ready.clear();
 		m_names.clear();
 		m_names.push_back(m_nickname);
 	}

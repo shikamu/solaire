@@ -1,6 +1,14 @@
 #pragma once
 #include "LANFinalView.h"
 
+namespace irr
+{
+	namespace gui
+	{
+		class IGUIStaticText;
+	}
+}
+
 class LANServer;
 class GameAdvertiser;
 
@@ -15,15 +23,23 @@ public:
 
 	void sendChatText(const wchar_t* playerName, const wchar_t* text);
 
+	void addBot();
+	void removeBot();
+
 	void switchToLANScene();
 
 private:
 
+	void refreshBotLabel();
+	void announceBotCount();
+
 	irr::core::stringw m_gameName;
-	
+
 	GameAdvertiser* m_advertiser;
 	//LANServer* m_server;
 	bool deleteServerStuffOnHide;
+
+	irr::gui::IGUIStaticText* m_botLabel;
 
 };
 

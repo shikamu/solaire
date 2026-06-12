@@ -218,6 +218,9 @@ wchar_t* Utilities::getActionName(const Action action)
 		case ACTION_8: return L"Pause";
 		case ACTION_9: return L"Action 9";
 		case ACTION_10: return L"Action 10";
+		case SPECTATE_TOGGLE: return L"Spectate Toggle";
+		case SPECTATE_NEXT: return L"Spectate Next";
+		case SPECTATE_PREV: return L"Spectate Previous";
 	}
 }
 

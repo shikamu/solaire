@@ -27,6 +27,10 @@ enum Action
 	ACTION_9,
 	ACTION_10,
 
+	SPECTATE_TOGGLE,
+	SPECTATE_NEXT,
+	SPECTATE_PREV,
+
 
 	NOT_AN_ACTION_COUNT //this isn't an action, just a way to count how many actions are supported
 };

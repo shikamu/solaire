@@ -17,6 +17,7 @@ private:
 
 	void createLANNewGame();
 	void joinLANGame();
+	void joinLANGameByIP();
 
 	MenuScene* m_scene;
 };

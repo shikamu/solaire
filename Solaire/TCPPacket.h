@@ -64,6 +64,73 @@ public:
 
 };
 
+//Header-only packet the server sends (then closes the socket) to tell a joining client the
+//game is full, so the client can show "game is full" instead of "name was refused".
+class RejectGameFullPacket : public TCPPacket
+{
+public:
+	RejectGameFullPacket();
+	~RejectGameFullPacket();
+
+	TCPPacketType getType() const;
+
+	bool init(void* data, const unsigned int);
+
+	bool send(SOCKET s);
+	bool receive(SOCKET s);
+
+};
+
+//Carries a single notification line (e.g. "X left the game") from the server to clients.
+//init() expects `data` to be a wchar_t* message; receive() shows it in the lobby chat.
+class SystemMessagePacket : public TCPPacket
+{
+public:
+	SystemMessagePacket();
+	~SystemMessagePacket();
+
+	TCPPacketType getType() const;
+
+	bool init(void* data, const unsigned int);
+
+	bool send(SOCKET s);
+	bool receive(SOCKET s);
+
+};
+
+//Client -> server: this client's lobby ready state. init() expects `data` to be a bool*.
+class ClientReadyPacket : public TCPPacket
+{
+public:
+	ClientReadyPacket();
+	~ClientReadyPacket();
+
+	TCPPacketType getType() const;
+
+	bool init(void* data, const unsigned int);
+
+	bool send(SOCKET s);
+	bool receive(SOCKET s);
+
+};
+
+//Server -> clients: an in-game notification line (kill feed, win banner, etc.). init()
+//expects `data` to be a wchar_t* message; receive() pushes it to the on-screen overlay.
+class KillFeedPacket : public TCPPacket
+{
+public:
+	KillFeedPacket();
+	~KillFeedPacket();
+
+	TCPPacketType getType() const;
+
+	bool init(void* data, const unsigned int);
+
+	bool send(SOCKET s);
+	bool receive(SOCKET s);
+
+};
+
 class RefreshNamesPacket : public TCPPacket
 {
 public:

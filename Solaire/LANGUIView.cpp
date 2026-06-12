@@ -66,11 +66,22 @@ LANGUIView::LANGUIView(MenuScene* parent) : m_socket(INVALID_SOCKET), GUIView(pa
 	test->setUseAlphaChannel(true);
 	test->setDrawBorder(false);
 	
+	//Second row: "Join IP..." lets you connect to a game by typing its address directly,
+	//useful when discovery can't see it (different subnet, etc.) or for quick local testing.
+	float row2Y = y+tableHeight+deltaY+buttonHeight+0.02f;
+	gui::IGUIButton* joinIP = env->addButton(core::rect<s32>(static_cast<s32>(dim.Width*x), static_cast<s32>(dim.Height*row2Y), static_cast<s32>(dim.Width*(x+buttonWidth)), static_cast<s32>(dim.Height*(row2Y+buttonHeight))), NULL, GUI_ID_LAN_JOINIP_BUTTON, L"Join IP...", L"Join a game by typing its IP address");
+	joinIP->setImage(driver->getTexture("TestButtonUp.tga"));
+	joinIP->setPressedImage(driver->getTexture("TestButtonDown.tga"));
+	joinIP->setScaleImage(true);
+	joinIP->setUseAlphaChannel(true);
+	joinIP->setDrawBorder(false);
+
 	m_elements.push_back(m_gameTable);
 	m_elements.push_back(create);
 	m_elements.push_back(m_joinButton);
 	m_elements.push_back(test);
-		
+	m_elements.push_back(joinIP);
+
 	hide();
 	m_listener->setPaused(true);
 	m_listener->start();
@@ -199,38 +210,53 @@ int LANGUIView::connect(const wchar_t* gameIP, const wchar_t* playerName)
 					}
 					else
 					{
-						//now we need to check from the server if we've been denied
+						//now we need to check from the server how it responded
 						char header[8];
-						unsigned int size = 8;
-						TCPPacketType type = ACCEPT_NAME;
-						memcpy(header, (char*)&size, 4);
-						memcpy(header+4, (char*)&type, 4);
-						//TCPPacket* packet = TCPPacketFactory::get().createPacket(header);
-						//if(packet->receive(m_socket))
 						if(TCPPacket::receiveHeader(m_socket, header) == RECEIVED_HEADER_SUCCESSFULLY)
 						{
-							System::get().log("received name accept packet");
-							//returnCode = 0;
-						
-							u_long iMode = 1;
-							int error = ioctlsocket(m_socket, FIONBIO, &iMode);
-							if(error != 0)
+							//The server replies with a header-only packet; its type tells us
+							//whether we were accepted or rejected (and why).
+							TCPPacketType responseType;
+							memcpy(&responseType, header+4, 4);
+
+							if(responseType == ACCEPT_NAME)
 							{
-								core::stringc errorMsg("ioctlsocket failed with ");
-								errorMsg += getSocketError(WSAGetLastError());
-								System::get().log(errorMsg.c_str());
+								System::get().log("received name accept packet");
+
+								u_long iMode = 1;
+								int error = ioctlsocket(m_socket, FIONBIO, &iMode);
+								if(error != 0)
+								{
+									core::stringc errorMsg("ioctlsocket failed with ");
+									errorMsg += getSocketError(WSAGetLastError());
+									System::get().log(errorMsg.c_str());
+									closesocket(m_socket);
+									returnCode = 8;
+								}
+								else
+								{
+									System::get().log("client successfully initialized");
+									returnCode = 0;
+								}
+							}
+							else if(responseType == REJECT_GAME_FULL)
+							{
+								System::get().log("server says the game is full");
 								closesocket(m_socket);
-								returnCode = 8;
+								returnCode = 9;
 							}
 							else
 							{
-								System::get().log("client successfully initialized");
-								returnCode = 0;
+								System::get().log("server sent an unexpected response to our name");
+								closesocket(m_socket);
+								returnCode = 7;
 							}
 						}
 						else
 						{
-							System::get().log("no receiving name accept packet");
+							//No response / connection closed: the name was refused (e.g. a
+							//duplicate nickname), which is how the server signals that case.
+							System::get().log("no name accept packet received");
 							returnCode = 7;
 						}
 					}

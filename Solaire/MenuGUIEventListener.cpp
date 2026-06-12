@@ -134,6 +134,27 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 					}
 					return true;
 				}
+				case GUI_ID_LANFINAL_READY_BUTTON:
+				{
+					LANFinalView* view = NetworkController::get().getLANFinalView();
+					if(view)
+						view->toggleReady();
+					return true;
+				}
+				case GUI_ID_LANFINAL_ADDBOT_BUTTON:
+				{
+					LANFinalView* view = NetworkController::get().getLANFinalView();
+					if(view)
+						view->addBot();
+					return true;
+				}
+				case GUI_ID_LANFINAL_REMOVEBOT_BUTTON:
+				{
+					LANFinalView* view = NetworkController::get().getLANFinalView();
+					if(view)
+						view->removeBot();
+					return true;
+				}
 				case GUI_ID_LANFINAL_STARTGAME_BUTTON:
 				{
 					if(evt.Caller->hasType(gui::EGUIET_BUTTON))
@@ -142,6 +163,14 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 						LANServer* server = NetworkController::get().getServer();
 						if(server)
 						{
+							//Don't launch until every connected client has readied up.
+							if(!server->allPlayersReady())
+							{
+								gui::IGUIWindow* msgbox = System::get().getDevice()->getGUIEnvironment()->addMessageBox(L"Not ready", L"All players must be ready before the game can start.", true, gui::EMBF_OK);
+								msgbox->setMinSize(core::dimension2du(320, 100));
+								return true;
+							}
+
 							LANFinalView* view = NetworkController::get().getLANFinalView();
 							if(view)
 							{
@@ -153,6 +182,36 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 						}
 					}
 					break;
+				}
+				case GUI_ID_LAN_JOINIP_BUTTON:
+				{
+					gui::IGUIEnvironment* env = System::get().getDevice()->getGUIEnvironment();
+					gui::IGUIWindow* msgbox = env->addMessageBox(L"Join by IP", NULL, true, (gui::EMBF_OK | gui::EMBF_CANCEL), NULL, GUI_ID_LAN_JOINIP_MESSAGEBOX);
+					msgbox->setMinSize(core::dimension2du(380, 140));
+					//Push the OK/CANCEL buttons to the bottom of the box; by default they sit
+					//near the top and overlap the input fields we add below.
+					core::list<gui::IGUIElement*> children = msgbox->getChildren();
+					for(core::list<gui::IGUIElement*>::ConstIterator it = children.begin(); it != children.end(); ++it)
+					{
+						gui::IGUIElement* elt = (*it);
+						if(elt->hasType(gui::EGUIET_BUTTON))
+						{
+							gui::IGUIButton* but = (gui::IGUIButton*)elt;
+							if(!_wcsicmp(but->getText(), L"OK") || !_wcsicmp(but->getText(), L"CANCEL"))
+							{
+								s32 h = but->getAbsolutePosition().getHeight();
+								but->setRelativePosition(core::position2di(but->getRelativePosition().UpperLeftCorner.X, msgbox->getAbsolutePosition().getHeight()-h-5));
+							}
+						}
+					}
+					env->addStaticText(L"Server IP: ", core::rect<s32>(10, 25, 125, 55), false, true, msgbox);
+					gui::IGUIEditBox* ip = env->addEditBox(L"127.0.0.1", core::rect<s32>(130, 25, 360, 55), true, msgbox, GUI_ID_LAN_JOINIP_IP_EDITBOX);
+					ip->setMax(45);//enough for an IPv4 dotted address or a short hostname
+					env->setFocus(ip);
+					env->addStaticText(L"Your Name: ", core::rect<s32>(10, 60, 125, 90), false, true, msgbox);
+					gui::IGUIEditBox* nick = env->addEditBox(L"", core::rect<s32>(130, 60, 360, 90), true, msgbox, GUI_ID_LAN_JOINIP_NICKNAME_EDITBOX);
+					nick->setMax(14);
+					return true;
 				}
 				case GUI_ID_LAN_TEST_BUTTON:
 				{
@@ -193,6 +252,11 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 				case GUI_ID_LANMENU_JOINGAME_MESSAGEBOX:
 				{
 					joinLANGame();
+					break;
+				}
+				case GUI_ID_LAN_JOINIP_MESSAGEBOX:
+				{
+					joinLANGameByIP();
 					break;
 				}
 			}
@@ -279,6 +343,18 @@ bool MenuGUIEventListener::onGUIEvent(const irr::SEvent::SGUIEvent& evt)
 
 					gui::IGUIElement* root = System::get().getDevice()->getGUIEnvironment()->getRootGUIElement();
 					gui::IGUIElement* view = root->getElementFromId(GUI_ID_LANMENU_JOINGAME_MESSAGEBOX, true);
+					if(view)
+					{
+						view->remove();
+					}
+					break;
+				}
+				case GUI_ID_LAN_JOINIP_NICKNAME_EDITBOX:
+				{
+					joinLANGameByIP();
+
+					gui::IGUIElement* root = System::get().getDevice()->getGUIEnvironment()->getRootGUIElement();
+					gui::IGUIElement* view = root->getElementFromId(GUI_ID_LAN_JOINIP_MESSAGEBOX, true);
 					if(view)
 					{
 						view->remove();
@@ -419,6 +495,9 @@ void MenuGUIEventListener::generateErrorMessageBoxForJoinFailure(const int error
 		case 8:
 			errorMessage = L"Failed to configure our socket (ioctlsocket failure).";
 			break;
+		case 9:
+			errorMessage = L"The game is full.";
+			break;
 	}
 
 	gui::IGUIWindow* msgbox = System::get().getDevice()->getGUIEnvironment()->addMessageBox(L"Failed to join the selected game", errorMessage.c_str(), true, gui::EMBF_OK);
@@ -455,6 +534,32 @@ void MenuGUIEventListener::createLANNewGame()
 	if(createButton)
 		createButton->setEnabled(true);//make sure this is done last
 
+}
+
+void MenuGUIEventListener::joinLANGameByIP()
+{
+	gui::IGUIEnvironment* env = System::get().getDevice()->getGUIEnvironment();
+	gui::IGUIElement* root = env->getRootGUIElement();
+	gui::IGUIEditBox* ipBox = (gui::IGUIEditBox*)root->getElementFromId(GUI_ID_LAN_JOINIP_IP_EDITBOX, true);
+	gui::IGUIEditBox* nickBox = (gui::IGUIEditBox*)root->getElementFromId(GUI_ID_LAN_JOINIP_NICKNAME_EDITBOX, true);
+	if(ipBox && nickBox)
+	{
+		core::stringw ipAddress(ipBox->getText());
+		core::stringw nickname(nickBox->getText());
+		int connect = m_scene->connectToGame(ipAddress.c_str(), nickname.c_str());
+		if(connect != 0)
+		{
+			core::stringc errorMsg("omfg, connect didn't succeed! returned code=");
+			errorMsg+=connect;
+			System::get().log(errorMsg.c_str());
+			generateErrorMessageBoxForJoinFailure(connect);
+		}
+		else
+		{
+			System::get().log("blimey, the server accepted us!");
+			m_scene->showLANClientView(nickname.c_str());
+		}
+	}
 }
 
 void MenuGUIEventListener::joinLANGame()

@@ -24,6 +24,26 @@ TCPPacket* TCPPacketFactory::instantiate(const TCPPacketType type) const
 			p = new (std::nothrow) AcceptNamePacket;
 			break;
 		}
+		case REJECT_GAME_FULL:
+		{
+			p = new (std::nothrow) RejectGameFullPacket;
+			break;
+		}
+		case SYSTEM_MESSAGE:
+		{
+			p = new (std::nothrow) SystemMessagePacket;
+			break;
+		}
+		case PLAYER_READY:
+		{
+			p = new (std::nothrow) ClientReadyPacket;
+			break;
+		}
+		case KILL_FEED:
+		{
+			p = new (std::nothrow) KillFeedPacket;
+			break;
+		}
 		case REFRESH_NAME_LIST:
 		{
 			p = new (std::nothrow) RefreshNamesPacket;

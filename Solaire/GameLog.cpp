@@ -3,6 +3,7 @@
 #include "GameLog.h"
 #include "Agent.h"
 #include "LogicConstants.h"
+#include "NetworkConstants.h"
 
 
 using std::pair;
@@ -69,7 +70,7 @@ GameLog& GameLog::Get()
 {
 	return m_Log;
 }
-GameLog::GameLog()
+GameLog::GameLog() : m_matchOver(false)
 {
 	m_GroupData.insert(pair<unsigned int, GroupLogData*>(MASK_GROUP_1, new GroupLogData(MASK_GROUP_1)));
 	m_GroupData.insert(pair<unsigned int, GroupLogData*>(MASK_GROUP_2, new GroupLogData(MASK_GROUP_2)));
@@ -92,9 +93,10 @@ GameLog::~GameLog()
 
 void GameLog::Clean()
 {
+	m_matchOver = false;
 	for (auto i = m_Data.begin(); i != m_Data.end(); i++)
 	{
-		delete i->second; 
+		delete i->second;
 	}
 	m_Data.clear();
 	for (auto i = m_GroupData.begin(); i != m_GroupData.end(); i++)
@@ -182,20 +184,20 @@ void GameLog::LogShot(unsigned int agentID)
 	LogGroupShot(Source->second->GroupID);
 }
 
-void GameLog::LogDeath(unsigned int agentID)
+unsigned int GameLog::LogDeath(unsigned int agentID)
 {
 	map<unsigned int, AgentLogData*>::iterator Target = m_Data.find(agentID);
-	if (Target == m_Data.end()) return; 
-	if (!Target->second) return; 
+	if (Target == m_Data.end()) return 0;
+	if (!Target->second) return 0;
 
 	Target->second->Score -= 2;
 	LogGroupScore(Target->second->GroupID, -2);
-	
-	if (Target->second->HitsReceived.size() < 1) return;
+
+	if (Target->second->HitsReceived.size() < 1) return 0;
 	map<unsigned int, AgentLogData*>::iterator Source = m_Data.find(Target->second->HitsReceived.back());
-	
-	if (Source == m_Data.end()) return; 
-	if (!Source->second) return; 
+
+	if (Source == m_Data.end()) return 0;
+	if (!Source->second) return 0;
 
 	Source->second->Score += 10;
 	LogGroupScore(Source->second->GroupID, 10);
@@ -203,10 +205,28 @@ void GameLog::LogDeath(unsigned int agentID)
 	//source killed, target died
 	LogGroupDeath(Target->second->GroupID);
 	Target->second->Deaths.push_back(Source->second->ID);
-	
+
 	LogGroupKill(Source->second->GroupID);
 	Source->second->Kills.push_back(Target->second->ID);
 
+	return Source->second->ID;
+}
+
+unsigned int GameLog::CheckForWinner()
+{
+	if (m_matchOver)
+		return 0;
+
+	const unsigned int groups[4] = { MASK_GROUP_1, MASK_GROUP_2, MASK_GROUP_3, MASK_GROUP_4 };
+	for (int i = 0; i < 4; ++i)
+	{
+		if ((unsigned int)GetGroupKills(groups[i]) >= MATCH_KILL_LIMIT)
+		{
+			m_matchOver = true;
+			return groups[i];
+		}
+	}
+	return 0;
 }
 void GameLog::LogHit(unsigned int sourceID, unsigned int targetID)
 {

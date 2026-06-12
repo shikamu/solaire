@@ -24,6 +24,8 @@
 #include "LogicConstants.h"
 #include "GarbageCollector.h"
 #include "AudioManager.h"
+#include "GUIConstants.h"
+#include "Agent.h"
 
 #ifdef _IRR_WINDOWS_
 //link library
@@ -191,6 +193,11 @@ int System::run()
 				m_currentScene->ReleaseLock();
 			}
 			m_sceneLock.Unlock();
+
+			//Drain any lobby chat/system-message lines queued by other threads (main thread).
+			flushLobbyChat();
+			updateGameNotifications(static_cast<float>(dt));
+
 			currentTime = now;
 
 			/*
@@ -281,6 +288,8 @@ void System::toggle(const SCENE scene)
 {
 	if(scene > SCENE_FIRST_NOT_A_SCENE && scene < SCENE_LAST_NOT_A_SCENE)
 	{
+		//Don't let kill-feed/notification lines linger across a scene change.
+		clearGameNotifications();
 		m_sceneLock.Lock();
 		if(m_currentScene)
 		{
@@ -348,6 +357,117 @@ void System::logw(const wchar_t* msg) const
 	}
 }
 
+void System::appendLobbyChatLine(const wchar_t* line)
+{
+	if(m_terminated)
+		return;
+	//Just queue it here - this is often called from the network thread, and touching the
+	//GUI off the main (render) thread corrupts Irrlicht's GUI tree and crashes. flushLobbyChat()
+	//does the actual write on the main thread.
+	m_chatQueueLock.Lock();
+	m_pendingChatLines.push_back(irr::core::stringw(line));
+	m_chatQueueLock.Unlock();
+}
+
+void System::flushLobbyChat()
+{
+	//Pull the queued lines out under the lock, then touch the GUI (main thread only).
+	std::vector<core::stringw> lines;
+	m_chatQueueLock.Lock();
+	lines.swap(m_pendingChatLines);
+	m_chatQueueLock.Unlock();
+
+	if(lines.empty() || m_terminated)
+		return;
+
+	//If the chat box isn't present (we're not in a lobby), the lines are simply dropped -
+	//the queue was already cleared by the swap above, so it can't grow without bound.
+	gui::IGUIEditBox* chat = (gui::IGUIEditBox*)getDevice()->getGUIEnvironment()->getRootGUIElement()->getElementFromId(GUI_ID_LANFINAL_CHAT_EDITBOX, true);
+	if(chat)
+	{
+		core::stringw t(chat->getText());
+		for(std::vector<core::stringw>::const_iterator it = lines.begin(); it != lines.end(); ++it)
+		{
+			t += L"\n";
+			t += *it;
+		}
+		chat->setText(t.c_str());
+	}
+}
+
+void System::pushGameNotification(const wchar_t* text)
+{
+	if(m_terminated)
+		return;
+	//Queue from whatever thread; the line is materialised on the main thread in
+	//updateGameNotifications (drawing/aging the GUI off the main thread would race the renderer).
+	m_notificationLock.Lock();
+	m_pendingNotifications.push_back(irr::core::stringw(text));
+	m_notificationLock.Unlock();
+}
+
+void System::updateGameNotifications(float dt)
+{
+	//Pull queued lines out under the lock, then work on the main-thread-only active list.
+	std::vector<core::stringw> incoming;
+	m_notificationLock.Lock();
+	incoming.swap(m_pendingNotifications);
+	m_notificationLock.Unlock();
+
+	for(std::vector<core::stringw>::const_iterator it = incoming.begin(); it != incoming.end(); ++it)
+	{
+		GameNotification n;
+		n.text = *it;
+		n.remaining = 6.0f;//seconds on screen
+		m_activeNotifications.push_back(n);
+	}
+
+	//Keep only the most recent few so a busy fight doesn't fill the screen.
+	const size_t maxLines = 6;
+	if(m_activeNotifications.size() > maxLines)
+		m_activeNotifications.erase(m_activeNotifications.begin(), m_activeNotifications.begin() + (m_activeNotifications.size() - maxLines));
+
+	for(std::vector<GameNotification>::iterator it = m_activeNotifications.begin(); it != m_activeNotifications.end(); )
+	{
+		it->remaining -= dt;
+		if(it->remaining <= 0.0f)
+			it = m_activeNotifications.erase(it);
+		else
+			++it;
+	}
+}
+
+void System::drawGameNotifications()
+{
+	if(m_terminated || m_activeNotifications.empty())
+		return;
+	gui::IGUIFont* font = getDevice()->getGUIEnvironment()->getBuiltInFont();
+	if(!font)
+		return;
+
+	const core::dimension2du screen = getDevice()->getVideoDriver()->getScreenSize();
+	s32 y = 80;//start below the top-of-screen HUD text
+	for(std::vector<GameNotification>::const_iterator it = m_activeNotifications.begin(); it != m_activeNotifications.end(); ++it)
+	{
+		u32 alpha = 255;
+		if(it->remaining < 1.0f)
+			alpha = (u32)(255.0f * it->remaining);//fade out over the last second
+
+		const core::dimension2du textDim = font->getDimension(it->text.c_str());
+		const s32 x = (s32)screen.Width - (s32)textDim.Width - 20;
+		font->draw(it->text.c_str(), core::recti(x, y, x + (s32)textDim.Width, y + (s32)textDim.Height), video::SColor(alpha, 255, 230, 120));
+		y += 18;
+	}
+}
+
+void System::clearGameNotifications()
+{
+	m_notificationLock.Lock();
+	m_pendingNotifications.clear();
+	m_notificationLock.Unlock();
+	m_activeNotifications.clear();
+}
+
 void System::updateSpaceObject(struct SpaceObjectNetworkInfo& info)
 {
 	//m_currentScene->AcquireLock();
@@ -357,8 +477,20 @@ void System::updateSpaceObject(struct SpaceObjectNetworkInfo& info)
 		RenderObject* rendObj = obj->GetRenderObject();
 		if (rendObj)
 		{
-			rendObj->SetPosition(info.position);
-			rendObj->SetRotation(info.rotation);
+			//Remote ships are eased toward the server transform (smooth motion); our own ship
+			//and fast/short-lived objects (projectiles, warheads) snap straight to it - the own
+			//ship for responsiveness, projectiles because smoothing would make them visibly lag.
+			const bool isShip = (obj->ObjectMask & MASK_SHIP) != 0;
+			const bool isOwnShip = isShip && m_currentScene->GetAgent() && m_currentScene->GetAgent()->GetSpaceObject() == obj;
+			if(isShip && !isOwnShip)
+			{
+				obj->SetNetworkTarget(info.position, info.rotation);
+			}
+			else
+			{
+				rendObj->SetPosition(info.position);
+				rendObj->SetRotation(info.rotation);
+			}
 		}
 
 		obj->SetRemainingShields(info.shieldRemaining);

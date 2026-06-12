@@ -96,6 +96,12 @@ private:
 	bool m_NeedsDeletion;
 	////////////////////
 
+	// Network interpolation (client side)
+	////////////////////
+	vector3df m_NetTargetPosition, m_NetTargetRotation;	//latest server-reported transform
+	bool m_HasNetTarget;								//false until the first server update arrives
+	////////////////////
+
 	// Shield/Armour Data
 	////////////////////
 	vector3df m_ShieldImpactDirection;
@@ -114,14 +120,14 @@ public:
 
 
 	CSLock m_ModuleListLock; 
-	SpaceObject() : 
+	SpaceObject() :
 		PhysicsListener(this), m_ParentScene (NULL),  ID (0), m_RenderObj (NULL), m_Targetter (NULL), m_AgentID(0),
 		m_Actuator (NULL), m_PhysicsObj (NULL), m_ShieldImpactTime (0.0f), m_ShieldRemaining (1.0f), m_ArmourRemaining(1.0f),  ObjectMask (0),
-		m_NeedsDeletion (false), m_CollisionTarget (NULL), m_HardTarget (NULL), m_SoftTarget (NULL), m_Shell (NULL) {};
-	SpaceObject(LogicScene* parent) : 
+		m_NeedsDeletion (false), m_CollisionTarget (NULL), m_HardTarget (NULL), m_SoftTarget (NULL), m_Shell (NULL), m_HasNetTarget (false) {};
+	SpaceObject(LogicScene* parent) :
 		PhysicsListener(this), m_ParentScene (parent), ID (0), m_RenderObj (NULL), m_Targetter (NULL), m_AgentID(0),
 		m_Actuator (NULL), m_PhysicsObj (NULL), m_ShieldImpactTime (0.0f), m_ShieldRemaining (1.0f), m_ArmourRemaining(1.0f), ObjectMask (0),
-		m_NeedsDeletion (false), m_CollisionTarget (NULL), m_HardTarget (NULL), m_SoftTarget (NULL), m_Shell (NULL) {};
+		m_NeedsDeletion (false), m_CollisionTarget (NULL), m_HardTarget (NULL), m_SoftTarget (NULL), m_Shell (NULL), m_HasNetTarget (false) {};
 	
 	~SpaceObject();
 
@@ -307,7 +313,14 @@ public:
 
 	}
 	virtual void Update(float dt);
-	void DeathCheck(); 
+
+	//Client-side smoothing of networked ships. SetNetworkTarget records the latest server
+	//transform (snapping on the first one), and InterpolateToNetworkTarget eases the render
+	//object toward it each frame so remote ships glide instead of teleporting per packet.
+	void SetNetworkTarget(const vector3df& pos, const vector3df& rot);
+	void InterpolateToNetworkTarget(float dt);
+
+	void DeathCheck();
 	void Die();
 };
 

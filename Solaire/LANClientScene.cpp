@@ -96,6 +96,14 @@ int LANClientScene::update(const float dt)
 	{
 		LogicScene::update(dt);
 
+		//LogicScene::update just applied the queued network updates (which set each remote
+		//ship's target transform). Now ease every ship toward its target for smooth motion.
+		//Objects without a network target (our own ship, projectiles) are left untouched.
+		for(std::map<unsigned int, SpaceObject*>::const_iterator it = m_SpaceObjectList.begin(); it != m_SpaceObjectList.end(); ++it)
+		{
+			it->second->InterpolateToNetworkTarget(dt);
+		}
+
 		if(!m_hasCentredMouse)
 		{
 			System::get().getDevice()->getCursorControl()->setPosition(0.5f, 0.5f);

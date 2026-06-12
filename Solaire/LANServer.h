@@ -70,6 +70,24 @@ public:
 
 	void toggleWantScore(SOCKET s);
 
+	//Lobby ready-up. setPlayerReady is called when a client's PLAYER_READY packet arrives;
+	//allPlayersReady (called from the main thread on PLAY) reports whether every connected
+	//client has readied up.
+	void setPlayerReady(SOCKET s, const bool ready);
+	bool allPlayersReady();
+
+	//Number of AI bots the host wants in the game (set from the lobby, read at game start).
+	void setBotCount(const unsigned int n);
+	unsigned int getBotCount() const;
+
+	//Sends a notification line to all clients and shows it on the host (lobby chat). Safe to
+	//call from the main thread or the network thread.
+	void broadcastSystemMessage(const wchar_t* text);
+
+	//Sends an in-game notification line (kill feed / win banner) to all clients. The host shows
+	//its own copy separately. Safe from the main thread or the network thread.
+	void broadcastKillFeed(const wchar_t* text);
+
 protected:
 	unsigned int __stdcall run();
 
@@ -96,7 +114,10 @@ private:
 	void checkNames();
 
 	void receiveData();
-	
+
+	//Broadcasts a "<name> left the game" notification. Called when a client connection drops.
+	void announcePlayerLeft(const irr::core::stringw& name);
+
 	void refreshNames();
 
 	std::vector<irr::core::stringw> m_names;
@@ -106,6 +127,8 @@ private:
 	std::vector<SOCKET> m_waitingForApproval;
 
 	std::map<SOCKET, bool> m_wantScores;
+
+	std::map<SOCKET, bool> m_ready;//lobby ready state per connected client socket
 
 	std::map<SOCKET, irr::core::stringw> m_players;
 
@@ -124,6 +147,8 @@ private:
 	bool m_initialized, m_paused, m_isInLobby;
 
 	bool m_doDisconnectAll;//this flag is used to bypass the disconnectEveryone call when the server view goes hidden. in all cases except one, we do indeed want to disconnect all, but when we press "play", this view gets hidden and we really don't want to disconnect everyone then
+
+	unsigned int m_botCount;//number of AI bots to spawn when the game starts
 
 	LANServer(const LANServer& other);
 	LANServer& operator=(const LANServer& other);

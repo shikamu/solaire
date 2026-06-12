@@ -139,12 +139,14 @@ void AIController::EvaluateTargets()
 
 	if (!m_Host->GetSoftTarget())
 	{
-		m_CurrentTarget = Candidate; 
+		m_CurrentTarget = Candidate;
 		m_Host->SetSoftTarget(Candidate);
 	}
-	else if (m_Host->GetSoftTarget()->ID != Candidate->ID)
+	else if (!Candidate || m_Host->GetSoftTarget()->ID != Candidate->ID)
 	{
-		m_CurrentTarget = Candidate; 
+		//Candidate can be NULL when every remaining target is an ally (e.g. all enemies
+		//left/died). Guard the ID dereference - without this the host crashes.
+		m_CurrentTarget = Candidate;
 		m_Host->SetSoftTarget(Candidate);
 	}
 }

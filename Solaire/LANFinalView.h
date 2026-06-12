@@ -23,6 +23,13 @@ public:
 
 	virtual void sendChatText(const wchar_t* playerName, const wchar_t* text);
 
+	//Only the client lobby view has a ready toggle; the host view ignores this.
+	virtual void toggleReady() {}
+
+	//Only the host lobby view manages bots; client views ignore these.
+	virtual void addBot() {}
+	virtual void removeBot() {}
+
 	virtual void switchToLANScene() = 0;
 
 protected:

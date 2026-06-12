@@ -19,6 +19,12 @@ class Agent
 private:
 	void updateTargetOutline(const float dt);
 
+	//Observer/spectator camera: poll the spectate keys, and switch which ship the camera
+	//follows. Your own ship stays in the game (idle) while you watch others.
+	void handleSpectatorInput();
+	void cycleSpectate(int direction);
+	void stopSpectating();
+
 protected:
 	stringw m_Name; 
 	unsigned int m_Mask;
@@ -39,8 +45,19 @@ protected:
 
 	// Lock indicators
 
-	irr::scene::IMeshSceneNode* m_Arrow; 
-	irr::scene::IMeshSceneNode* m_TargetDataNode; 
+	irr::scene::IMeshSceneNode* m_Arrow;
+	irr::scene::IMeshSceneNode* m_TargetDataNode;
+
+	// Lead-indicator support: the current target's velocity, estimated from how far it moved
+	// between frames (so this works on the client too, where target velocity isn't replicated).
+	irr::core::vector3df m_LastTargetPos;
+	irr::core::vector3df m_EstimatedTargetVel;
+	unsigned int m_LastTargetID;
+
+	// Spectator state.
+	bool m_Spectating;
+	unsigned int m_SpectateID;//ship currently watched (resolved by ID each frame so it can't dangle)
+	bool m_prevSpecToggle, m_prevSpecNext, m_prevSpecPrev;//key edge-detection
 
 
 	// TODO Delete old lock marker code
@@ -49,7 +66,8 @@ protected:
 	//float m_LockState;
 
 public:
-	Agent() : m_Score(0), m_AgentID(0), m_CurrentObject(NULL), m_Mask(0), m_ParentScene(NULL), m_Shield (NULL), m_Armour (NULL), m_hudshader(NULL), m_targetshader(NULL), m_reticule(NULL), m_TargetName (NULL), m_Arrow(NULL), m_TargetShield(0.0f), m_TargetArmour(0.0f), m_TargetDataNode(NULL)
+	Agent() : m_Score(0), m_AgentID(0), m_CurrentObject(NULL), m_Mask(0), m_ParentScene(NULL), m_Shield (NULL), m_Armour (NULL), m_hudshader(NULL), m_targetshader(NULL), m_reticule(NULL), m_TargetName (NULL), m_Arrow(NULL), m_TargetShield(0.0f), m_TargetArmour(0.0f), m_TargetDataNode(NULL), m_LastTargetID(0),
+		m_Spectating(false), m_SpectateID(0), m_prevSpecToggle(false), m_prevSpecNext(false), m_prevSpecPrev(false)
 	{
 	}
 	virtual ~Agent() 
@@ -108,9 +126,13 @@ public:
 		return m_Score; 
 	}
 
-	virtual void Init() {} 
-	virtual void Update(float dt) {} 
+	virtual void Init() {}
+	virtual void Update(float dt) {}
 	virtual void clean();
 	void InitGUI();
 	void UpdateGUI(float dt);
+
+	//Draws the 2D HUD overlay for the local player (radar + projectile lead indicator).
+	//Called from the render pass, after the 3D scene and GUI are drawn.
+	void DrawHUD();
 };

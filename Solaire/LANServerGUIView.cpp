@@ -14,8 +14,8 @@
 
 using namespace irr;
 
-LANServerGUIView::LANServerGUIView(MenuScene* parent, const wchar_t* playerName, const wchar_t* gameName) : LANFinalView(parent, playerName), 
-	m_gameName(gameName), m_advertiser(NULL)/*m_advertiser(new GameAdvertiser(gameName, playerName)), m_server(NULL)*/, deleteServerStuffOnHide(false)
+LANServerGUIView::LANServerGUIView(MenuScene* parent, const wchar_t* playerName, const wchar_t* gameName) : LANFinalView(parent, playerName),
+	m_gameName(gameName), m_advertiser(NULL)/*m_advertiser(new GameAdvertiser(gameName, playerName)), m_server(NULL)*/, deleteServerStuffOnHide(false), m_botLabel(NULL)
 {
 	gui::IGUIEnvironment* env = System::get().getDevice()->getGUIEnvironment();
 	video::IVideoDriver* driver = System::get().getDevice()->getVideoDriver();
@@ -39,6 +39,30 @@ LANServerGUIView::LANServerGUIView(MenuScene* parent, const wchar_t* playerName,
 	startGame->setUseAlphaChannel(true);
 	startGame->setDrawBorder(false);
 	m_elements.push_back(startGame);
+
+	//Bot controls (host only): add/remove AI bots that will spawn when the game starts.
+	float botBtnW = 0.12f;
+	float botBtnH = 0.06f;
+	float botY = 1.0f - botBtnH - 0.02f;
+	m_botLabel = env->addStaticText(L"Bots: 0", core::rect<s32>(static_cast<s32>(dim.Width*0.02f), static_cast<s32>(dim.Height*(botY-0.06f)), static_cast<s32>(dim.Width*0.3f), static_cast<s32>(dim.Height*(botY-0.01f))));
+	m_botLabel->setOverrideColor(video::SColor(255, 255, 255, 255));
+	m_elements.push_back(m_botLabel);
+
+	gui::IGUIButton* addBotBtn = env->addButton(core::rect<s32>(static_cast<s32>(dim.Width*0.02f), static_cast<s32>(dim.Height*botY), static_cast<s32>(dim.Width*(0.02f+botBtnW)), static_cast<s32>(dim.Height*(botY+botBtnH))), NULL, GUI_ID_LANFINAL_ADDBOT_BUTTON, L"Add Bot", L"Add an AI bot to the game");
+	addBotBtn->setImage(driver->getTexture("TestButtonUp.tga"));
+	addBotBtn->setPressedImage(driver->getTexture("TestButtonDown.tga"));
+	addBotBtn->setScaleImage(true);
+	addBotBtn->setUseAlphaChannel(true);
+	addBotBtn->setDrawBorder(false);
+	m_elements.push_back(addBotBtn);
+
+	gui::IGUIButton* removeBotBtn = env->addButton(core::rect<s32>(static_cast<s32>(dim.Width*(0.04f+botBtnW)), static_cast<s32>(dim.Height*botY), static_cast<s32>(dim.Width*(0.04f+2*botBtnW)), static_cast<s32>(dim.Height*(botY+botBtnH))), NULL, GUI_ID_LANFINAL_REMOVEBOT_BUTTON, L"Remove Bot", L"Remove an AI bot");
+	removeBotBtn->setImage(driver->getTexture("TestButtonUp.tga"));
+	removeBotBtn->setPressedImage(driver->getTexture("TestButtonDown.tga"));
+	removeBotBtn->setScaleImage(true);
+	removeBotBtn->setUseAlphaChannel(true);
+	removeBotBtn->setDrawBorder(false);
+	m_elements.push_back(removeBotBtn);
 
 	NetworkController::get().unregisterLANServer();
 	/*
@@ -106,6 +130,51 @@ void LANServerGUIView::show()
 	server->setPaused(false);
 
 	GUIView::show();
+	refreshBotLabel();
+}
+
+void LANServerGUIView::addBot()
+{
+	LANServer* server = NetworkController::get().getServer();
+	if(server && server->getBotCount() < MAX_BOTS)
+	{
+		server->setBotCount(server->getBotCount() + 1);
+		announceBotCount();
+	}
+	refreshBotLabel();
+}
+
+void LANServerGUIView::removeBot()
+{
+	LANServer* server = NetworkController::get().getServer();
+	if(server && server->getBotCount() > 0)
+	{
+		server->setBotCount(server->getBotCount() - 1);
+		announceBotCount();
+	}
+	refreshBotLabel();
+}
+
+void LANServerGUIView::refreshBotLabel()
+{
+	if(!m_botLabel)
+		return;
+	LANServer* server = NetworkController::get().getServer();
+	unsigned int n = server ? server->getBotCount() : 0;
+	core::stringw t(L"Bots: ");
+	t += (int)n;
+	m_botLabel->setText(t.c_str());
+}
+
+void LANServerGUIView::announceBotCount()
+{
+	LANServer* server = NetworkController::get().getServer();
+	if(!server)
+		return;
+	//Let everyone in the lobby know the current bot count.
+	core::stringw msg(L"* Bots in game: ");
+	msg += (int)server->getBotCount();
+	server->broadcastSystemMessage(msg.c_str());
 }
 
 void LANServerGUIView::hide()

@@ -357,6 +357,284 @@ bool AcceptNamePacket::receive(SOCKET s)
 	return returnValue;
 }
 
+RejectGameFullPacket::RejectGameFullPacket() : TCPPacket()
+{
+
+}
+
+RejectGameFullPacket::~RejectGameFullPacket()
+{
+
+}
+
+TCPPacketType RejectGameFullPacket::getType() const
+{
+	return REJECT_GAME_FULL;
+}
+
+bool RejectGameFullPacket::init(void* data, const unsigned int)
+{
+	if(!m_initialized)
+	{
+		if(m_data)
+		{
+			delete[] m_data;
+		}
+		m_size = TCP_HEADER_SIZE;
+		TCPPacketType type = getType();
+		m_data = new (std::nothrow) char[m_size];
+		if(m_data)
+		{
+			memcpy(m_data, (char*)&m_size, 4);
+			memcpy(m_data+4, (char*)&type, 4);
+		}
+		else
+			return false;
+	}
+	return TCPPacket::init(m_data, m_size);
+}
+
+bool RejectGameFullPacket::send(SOCKET s)
+{
+	return TCPPacket::send(s);
+}
+
+bool RejectGameFullPacket::receive(SOCKET s)
+{
+	bool returnValue = false;
+	if(m_initialized && s != INVALID_SOCKET)
+	{
+		//drain first, then validate size (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE)
+		{
+			returnValue = true;
+		}
+	}
+	return returnValue;
+}
+
+SystemMessagePacket::SystemMessagePacket() : TCPPacket()
+{
+
+}
+
+SystemMessagePacket::~SystemMessagePacket()
+{
+
+}
+
+TCPPacketType SystemMessagePacket::getType() const
+{
+	return SYSTEM_MESSAGE;
+}
+
+bool SystemMessagePacket::init(void* data, const unsigned int)
+{
+	if(!m_initialized)
+	{
+		if(m_data)
+		{
+			delete[] m_data;
+		}
+		TCPPacketType type = getType();
+
+		wchar_t* message = static_cast<wchar_t*>(data);
+		size_t messageSize;
+		wcstombs_s(&messageSize, NULL, 0, message, _TRUNCATE);//includes the NULL terminator byte
+		char* cmessage = new char[messageSize];
+		wcstombs_s(&messageSize, cmessage, messageSize, message, _TRUNCATE);
+
+		m_size = TCP_HEADER_SIZE + messageSize;
+		m_data = new (std::nothrow) char[m_size];
+		if(m_data)
+		{
+			memcpy(m_data, (char*)&m_size, 4);
+			memcpy(m_data+4, (char*)&type, 4);
+			memcpy(m_data+4+4, cmessage, messageSize);
+			delete[] cmessage;
+		}
+		else
+		{
+			delete[] cmessage;
+			return false;
+		}
+	}
+	return TCPPacket::init(m_data, m_size);
+}
+
+bool SystemMessagePacket::send(SOCKET s)
+{
+	return TCPPacket::send(s);
+}
+
+bool SystemMessagePacket::receive(SOCKET s)
+{
+	bool returnValue = false;
+	if(m_initialized && s != INVALID_SOCKET)
+	{
+		//drain the body first, then read it (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s))
+		{
+			if(m_size > TCP_HEADER_SIZE)
+			{
+				const unsigned int messageLength = m_size - TCP_HEADER_SIZE;//in bounds: m_data is m_size bytes
+				size_t wlen = 0;
+				mbstowcs_s(&wlen, NULL, 0, m_data+TCP_HEADER_SIZE, messageLength);
+				wchar_t* wmessage = new wchar_t[wlen];
+				mbstowcs_s(&wlen, wmessage, wlen, m_data+TCP_HEADER_SIZE, messageLength);
+
+				System::get().appendLobbyChatLine(wmessage);
+				delete[] wmessage;
+			}
+			returnValue = true;
+		}
+	}
+	return returnValue;
+}
+
+ClientReadyPacket::ClientReadyPacket() : TCPPacket()
+{
+
+}
+
+ClientReadyPacket::~ClientReadyPacket()
+{
+
+}
+
+TCPPacketType ClientReadyPacket::getType() const
+{
+	return PLAYER_READY;
+}
+
+bool ClientReadyPacket::init(void* data, const unsigned int)
+{
+	if(!m_initialized)
+	{
+		if(m_data)
+		{
+			delete[] m_data;
+		}
+		m_size = TCP_HEADER_SIZE + 1;
+		TCPPacketType type = getType();
+		char ready = (data && *(bool*)data) ? 1 : 0;
+		m_data = new (std::nothrow) char[m_size];
+		if(m_data)
+		{
+			memcpy(m_data, (char*)&m_size, 4);
+			memcpy(m_data+4, (char*)&type, 4);
+			memcpy(m_data+4+4, &ready, 1);
+		}
+		else
+			return false;
+	}
+	return TCPPacket::init(m_data, m_size);
+}
+
+bool ClientReadyPacket::send(SOCKET s)
+{
+	return TCPPacket::send(s);
+}
+
+bool ClientReadyPacket::receive(SOCKET s)
+{
+	bool returnValue = false;
+	if(m_initialized && s != INVALID_SOCKET)
+	{
+		//drain first, then validate size (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s) && m_size == TCP_HEADER_SIZE+1)
+		{
+			char ready = 0;
+			memcpy(&ready, m_data+TCP_HEADER_SIZE, 1);
+			//The server identifies which player sent this by the socket it arrived on.
+			LANServer* server = NetworkController::get().getServer();
+			if(server)
+				server->setPlayerReady(s, ready != 0);
+			returnValue = true;
+		}
+	}
+	return returnValue;
+}
+
+KillFeedPacket::KillFeedPacket() : TCPPacket()
+{
+
+}
+
+KillFeedPacket::~KillFeedPacket()
+{
+
+}
+
+TCPPacketType KillFeedPacket::getType() const
+{
+	return KILL_FEED;
+}
+
+bool KillFeedPacket::init(void* data, const unsigned int)
+{
+	if(!m_initialized)
+	{
+		if(m_data)
+		{
+			delete[] m_data;
+		}
+		TCPPacketType type = getType();
+
+		wchar_t* message = static_cast<wchar_t*>(data);
+		size_t messageSize;
+		wcstombs_s(&messageSize, NULL, 0, message, _TRUNCATE);//includes the NULL terminator byte
+		char* cmessage = new char[messageSize];
+		wcstombs_s(&messageSize, cmessage, messageSize, message, _TRUNCATE);
+
+		m_size = TCP_HEADER_SIZE + messageSize;
+		m_data = new (std::nothrow) char[m_size];
+		if(m_data)
+		{
+			memcpy(m_data, (char*)&m_size, 4);
+			memcpy(m_data+4, (char*)&type, 4);
+			memcpy(m_data+4+4, cmessage, messageSize);
+			delete[] cmessage;
+		}
+		else
+		{
+			delete[] cmessage;
+			return false;
+		}
+	}
+	return TCPPacket::init(m_data, m_size);
+}
+
+bool KillFeedPacket::send(SOCKET s)
+{
+	return TCPPacket::send(s);
+}
+
+bool KillFeedPacket::receive(SOCKET s)
+{
+	bool returnValue = false;
+	if(m_initialized && s != INVALID_SOCKET)
+	{
+		//drain the body first, then read it (see AcceptNamePacket::receive note)
+		if(TCPPacket::receive(s))
+		{
+			if(m_size > TCP_HEADER_SIZE)
+			{
+				const unsigned int messageLength = m_size - TCP_HEADER_SIZE;//in bounds: m_data is m_size bytes
+				size_t wlen = 0;
+				mbstowcs_s(&wlen, NULL, 0, m_data+TCP_HEADER_SIZE, messageLength);
+				wchar_t* wmessage = new wchar_t[wlen];
+				mbstowcs_s(&wlen, wmessage, wlen, m_data+TCP_HEADER_SIZE, messageLength);
+
+				System::get().pushGameNotification(wmessage);
+				delete[] wmessage;
+			}
+			returnValue = true;
+		}
+	}
+	return returnValue;
+}
+
 RefreshNamesPacket::RefreshNamesPacket() : TCPPacket()
 {
 
@@ -624,16 +902,13 @@ bool SendChatTextPacket::receive(SOCKET s)
 			wchar_t* text = new wchar_t[theSize];
 			mbstowcs_s(&theSize, text, theSize, m_data+TCP_HEADER_SIZE+4+4+nameSize, textSize);
 
-			gui::IGUIEditBox* chat = (gui::IGUIEditBox*)System::get().getDevice()->getGUIEnvironment()->getRootGUIElement()->getElementFromId(GUI_ID_LANFINAL_CHAT_EDITBOX, true);
-			if(chat)
-			{
-				core::stringw t(chat->getText());
-				t+=L"\n";
-				t+=playername;
-				t+=L": ";
-				t+=text;
-				chat->setText(t.c_str());
-			}
+			//Queue the line for the main thread instead of writing the GUI here on the
+			//network thread (that races the renderer and corrupts Irrlicht's GUI tree).
+			core::stringw line(playername);
+			line += L": ";
+			line += text;
+			System::get().appendLobbyChatLine(line.c_str());
+
 			if(NetworkController::get().getServer())
 			{
 				NetworkController::get().sendPacket(this);
